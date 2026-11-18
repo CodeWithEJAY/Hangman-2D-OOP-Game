@@ -49,7 +49,7 @@ public class NPC extends GameCharacter {
         super(name, x, fy, pal);
 
         this.requiresItems = requiresItems == null
-            ? List.of()
+            ? List.of()   
             : List.copyOf(requiresItems);
 
         this.rewardItem = rewardItem;

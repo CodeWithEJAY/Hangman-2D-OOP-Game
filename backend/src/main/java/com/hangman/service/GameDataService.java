@@ -44,7 +44,7 @@ private void validateCharacterIntroductions() {
             "pocket-knife",
             "Animal",
             5,
-            6,
+            7,
             new NPCAppearance("#f1c08a", "#5fe0b0", "#7a5230", "spiky", "#5a3418", null),
             "Unleash Biscuit the dog",
             "Biscuit is loose! Woof!",

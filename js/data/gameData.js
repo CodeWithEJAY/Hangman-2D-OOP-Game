@@ -48,6 +48,7 @@ export const loadGameData = async () => {
   Object.assign(BOSS, data.boss);
 
   console.log("Java game data loaded successfully.");
+  console.log("this for testing if the backend load the api into the frontend");
   console.log("NPCs:", NPCS.length);
   console.log("Items:", Object.keys(QUEST_ITEMS).length);
   console.log("Boss:", BOSS.name);
