@@ -1,4 +1,4 @@
-
+//this is for the audio
 let audioContext = null;
 let masterGain = null;
 
@@ -9,7 +9,7 @@ let bossMusicGain = null;
 const MENU_BGM_URL = new URL("../../assets/audio/load.mp3", import.meta.url).href;
 const GAME_BGM_URL = new URL("../../assets/audio/stardew.mp3", import.meta.url).href;
 const QUEST_BGM_URL = new URL("../../assets/audio/boss.mp3", import.meta.url).href;
-const BOSS_BGM_URL = new URL("../../assets/audio/boss.mp3", import.meta.url).href;
+const BOSS_BGM_URL = new URL("../../assets/audio/boss2.mp3", import.meta.url).href;
 
 let menuMusicAudio = null;
 let menuMusicRequested = false;
