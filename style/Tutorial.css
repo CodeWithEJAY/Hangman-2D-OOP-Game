@@ -196,3 +196,25 @@
     opacity: .85;
     text-align: center;
 }
+#tut [data-tutorial-page][hidden] {
+    display: none !important;
+}
+
+#tut .tutorial-details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#tut .tutorial-details-grid .tutorial-step {
+    min-width: 0;
+}
+
+#tut .tutorial-details-grid .tutorial-step p {
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+@media (max-width: 480px) {
+    #tut .tutorial-details-grid {
+        grid-template-columns: 1fr;
+    }
+}

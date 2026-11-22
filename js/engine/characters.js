@@ -11,7 +11,17 @@ const rc = (x, y, w, h, c) => {
 
 export const px = (x) => Math.round(x - camera.x);
 
-export function drawCharacter(x, y, palette, face, time, scale = 3) {
+export function drawCharacter(
+  x,
+  y,
+  palette,
+  face,
+  time,
+  scale = 3,
+  moving = false,
+  expression = "neutral",
+  talking = false
+) {
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
   ctx.scale(face, 1);
@@ -19,13 +29,19 @@ export function drawCharacter(x, y, palette, face, time, scale = 3) {
   const u = (a, b, w, h, c) =>
     rc(a * scale, b * scale, w * scale, h * scale, c);
 
-  const s = Math.round(Math.sin(time * 10) * 2);
-  const ink = "#16257a";
+  const step = moving ? Math.sin(time * 11) * 0.55 : 0;
+  const leftLift = step > 0 ? 0.35 : 0;
+  const rightLift = step < 0 ? 0.35 : 0;
 
-  u(-3 + s, -5, 3, 5, palette.p);
-  u(1 - s, -5, 3, 5, palette.p);
-  u(-3 + s, -1, 4, 1, ink);
-  u(1 - s, -1, 4, 1, ink);
+  const ink = "#16257a";
+  const h = palette.h;
+  const hasBeard = palette.a === "beard";
+  const hasMoustache = palette.a === "stache";
+
+  u(-3 + step, -5 - leftLift, 3, 5, palette.p);
+  u(1 - step, -5 - rightLift, 3, 5, palette.p);
+  u(-3 + step, -1 - leftLift, 4, 1, ink);
+  u(1 - step, -1 - rightLift, 4, 1, ink);
 
   u(-4, -12, 8, 7, palette.t);
   u(-6, -12, 2, 6, palette.t);
@@ -34,10 +50,44 @@ export function drawCharacter(x, y, palette, face, time, scale = 3) {
   u(4, -6, 2, 1, palette.s);
 
   u(-4, -19, 8, 7, palette.s);
-  u(0, -16, 1, 2, ink);
-  u(2, -16, 1, 2, ink);
 
-  const h = palette.h;
+  const eyeColor = h === "robot" ? "#5fe0b0" : ink;
+  const blinkCycle = (time + Math.abs(x) * 0.013) % 4.5;
+  const blinking = blinkCycle > 4.35;
+
+  if (blinking) {
+    u(0, -15, 1, 1, eyeColor);
+    u(2, -15, 1, 1, eyeColor);
+  } else {
+    u(0, -16, 1, 2, eyeColor);
+    u(2, -16, 1, 2, eyeColor);
+  }
+
+  if (expression === "worried") {
+    u(-1, -18, 2, 1, ink);
+    u(2, -18, 2, 1, ink);
+  }
+
+  if (expression === "focused") {
+    u(-1, -17, 2, 1, ink);
+    u(2, -17, 2, 1, ink);
+  }
+
+  if (!hasBeard) {
+    if (talking) {
+      const mouthOpen = Math.sin(time * 12) > 0;
+
+      if (mouthOpen) {
+        u(0, -13, 2, 1, ink);
+      } else {
+        u(0, -13, 1, 1, ink);
+      }
+    } else if (expression === "happy" && !hasMoustache) {
+      u(0, -13, 3, 1, ink);
+    } else if (expression === "worried" && !hasMoustache) {
+      u(0, -13, 2, 1, ink);
+    }
+  }
 
   if (h === "cap") {
     u(-4, -21, 8, 3, palette.c);
@@ -96,12 +146,12 @@ export function drawCharacter(x, y, palette, face, time, scale = 3) {
     u(2, -17, 3, 3, "rgba(255,255,255,.75)");
   }
 
-  if (palette.a === "beard") {
+  if (hasBeard) {
     u(-3, -14, 6, 4, "#e8e8ee");
     u(-1, -10, 2, 2, "#e8e8ee");
   }
 
-  if (palette.a === "stache") {
+  if (hasMoustache) {
     u(0, -14, 5, 1, "#5a3418");
   }
 
@@ -115,19 +165,188 @@ export const PLAYER = {
   h: "cap",
   c: "#ff6f7d"
 };
-
 export const drawPlayer = (player) => {
-  if (!player) return;
+  if (!player) {
+    drawPlayer.lastX = null;
+    drawPlayer.lastMoveAt = 0;
+    return;
+  }
+
+  const now = performance.now();
+
+  if (drawPlayer.lastX === null || drawPlayer.lastX === undefined) {
+    drawPlayer.lastX = player.x;
+    drawPlayer.lastMoveAt = 0;
+  }
+
+  if (Math.abs(player.x - drawPlayer.lastX) > 0.1) {
+    drawPlayer.lastMoveAt = now;
+  }
+
+  drawPlayer.lastX = player.x;
+
+  const moving = now - drawPlayer.lastMoveAt < 120;
 
   drawCharacter(
-      px(player.x + player.width / 2),
+    px(player.x + player.width / 2),
     player.y + player.height,
     PLAYER,
     player.facing || 1,
-    player.t || 0
+    now / 1000,
+    3,
+    moving
   );
 };
+const drawNPCIdleAction = (npc, x, y, time, facing) => {
+  if (npc.state === 2) return;
 
+  ctx.save();
+  ctx.translate(Math.round(x), Math.round(y));
+  ctx.scale(facing, 1);
+
+  const p = (a, b, w, h, color) =>
+    rc(a * 3, b * 3, w * 3, h * 3, color);
+
+  const sleeve = npc.pal.t;
+  const skin = npc.pal.s;
+  const ink = "#16257a";
+  const motion = Math.round(Math.sin(time * 4) * 1);
+  const pull = Math.round(Math.sin(time * 5) * 1);
+
+  switch (npc.name) {
+    case "Luigi": {
+      p(1, -11, 3, 2, sleeve);
+      p(3, -10, 3, 2, sleeve);
+      p(5 + pull, -9, 3, 2, skin);
+
+      p(-3, -11, 3, 2, sleeve);
+      p(-1, -9, 3, 2, skin);
+      p(2 + pull, -8, 3, 2, skin);
+
+      p(5, -8, 4, 1, "#d9a066");
+      p(8, -9, 2, 2, "#d9a066");
+      break;
+    }
+
+    case "Jasmine": {
+      const turn = Math.sin(time * 5) > 0 ? 0 : 1;
+
+      p(2, -11, 3, 2, sleeve);
+      p(4, -10, 3, 2, sleeve);
+      p(6, -10, 3, 2, skin);
+
+      p(-4, -11, 3, 2, sleeve);
+      p(-3, -9, 3, 2, skin);
+
+      p(8, -11, 1, 4, "#ffd166");
+      p(7 + turn, -12, 3, 1, "#ffd166");
+      p(8, -8, 3, 1, "#ffd166");
+
+      p(10, -11, 2, 3, "#8a5938");
+      break;
+    }
+
+    case "Zed": {
+      const tug = Math.round(Math.sin(time * 3.5) * 2);
+
+      p(2, -12, 3, 2, sleeve);
+      p(3, -15, 2, 4, sleeve);
+      p(4, -17 + tug, 2, 2, skin);
+
+      p(-3, -11, 3, 2, sleeve);
+      p(-1, -13, 2, 3, sleeve);
+      p(0, -16 + tug, 2, 2, skin);
+
+      p(5, -24, 1, 9, "#d9a066");
+      p(4, -25, 3, 1, "#d9a066");
+      break;
+    }
+
+    case "Erickson": {
+      const reach = Math.round((Math.sin(time * 3) + 1) * 1.5);
+
+      p(-4, -12, 3, 2, sleeve);
+      p(-5, -15 - reach, 2, 5, sleeve);
+      p(-5, -19 - reach, 3, 2, skin);
+
+      p(2, -12, 3, 2, sleeve);
+      p(4, -15 - reach, 2, 5, sleeve);
+      p(4, -19 - reach, 3, 2, skin);
+
+      break;
+    }
+
+    case "Gino": {
+      const repair = Math.round(Math.sin(time * 8) * 1);
+
+      p(2, -11, 3, 2, sleeve);
+      p(4, -10, 3, 2, skin);
+      p(6, -9 + repair, 2, 2, skin);
+
+      p(-4, -11, 3, 2, sleeve);
+      p(-5, -9, 3, 2, skin);
+      p(-2, -8 - repair, 3, 2, skin);
+
+      p(3, -8, 3, 1, "#b8c4d6");
+      p(5, -9, 1, 3, "#8493ad");
+      p(6, -7, 2, 1, "#ffd166");
+
+      break;
+    }
+
+    case "Finn": {
+      const reel = Math.round(Math.sin(time * 4) * 1);
+
+      p(2, -11, 3, 2, sleeve);
+      p(4, -10, 3, 2, skin);
+      p(6, -10 + reel, 2, 2, skin);
+
+      p(-4, -11, 3, 2, sleeve);
+      p(-2, -10, 3, 2, skin);
+
+      p(7, -15 + reel, 1, 8, "#8a5938");
+      p(7, -17 + reel, 1, 3, "#8a5938");
+      p(8, -17 + reel, 1, 1, "#8a5938");
+
+      break;
+    }
+
+    case "Zara": {
+      const scrape = Math.round(Math.sin(time * 6) * 1);
+
+      p(2, -11, 3, 2, sleeve);
+      p(4, -10, 3, 2, skin);
+      p(7, -10 + scrape, 3, 1, skin);
+
+      p(-4, -11, 3, 2, sleeve);
+      p(-2, -9, 3, 2, skin);
+
+      p(8, -13 + scrape, 1, 5, "#a8a8b4");
+      p(7, -14 + scrape, 3, 1, "#d9d9df");
+
+      break;
+    }
+
+    case "Farmer Joe": {
+      const strain = Math.round(Math.sin(time * 3.5) * 2);
+
+      p(2, -11, 3, 2, sleeve);
+      p(4, -10, 3, 2, skin);
+      p(6, -9 + strain, 2, 2, skin);
+
+      p(-4, -11, 3, 2, sleeve);
+      p(-3, -9, 3, 2, skin);
+      p(-1, -8 + strain, 2, 2, skin);
+
+      p(7, -9 + strain, 4, 1, "#4fae3a");
+      p(9, -11 + strain, 2, 2, "#3f9f3a");
+
+      break;
+    }
+  }
+
+  ctx.restore();
+};
 export const drawNPC = (
   npc,
   playerX,
@@ -136,16 +355,34 @@ export const drawNPC = (
 ) => {
   const y = npc.fy ?? GROUND_Y;
   const sx = px(npc.x);
+  const time = performance.now() / 1000;
+
+  const distance = Math.abs(npc.x - (playerX + 12));
+  const isTalking = mode === "play" && dialogueOpen && distance < 80;
+
+  let expression = "neutral";
+
+  if (npc.state === 2) {
+    expression = "happy";
+  } else if (npc.failed) {
+    expression = "worried";
+  } else if (npc.round) {
+    expression = "focused";
+  }
 
   drawCharacter(
     sx,
     y,
     npc.pal,
     playerX < npc.x ? -1 : 1,
-    0
+    time,
+    3,
+    false,
+    expression,
+    isTalking
   );
 
-  const bob = Math.sin(performance.now() / 1000 * 5 + npc.x) * 3;
+  const bob = Math.sin(time * 5 + npc.x) * 3;
 
   ctx.font = "700 24px Pixelify Sans, monospace";
   ctx.textAlign = "center";
@@ -167,15 +404,7 @@ export const drawNPC = (
   ctx.fillStyle = "#fff";
   ctx.fillText(npc.name, sx, y - 124);
 
-  const distance = Math.abs(
-    npc.x - (playerX + 12)
-  );
-
-  if (
-    mode === "play" &&
-    distance < 80 &&
-    !dialogueOpen
-  ) {
+  if (mode === "play" && distance < 80 && !dialogueOpen) {
     rc(sx - 34, y - 158, 68, 22, "#fff");
 
     ctx.strokeStyle = "#16257a";
@@ -188,6 +417,7 @@ export const drawNPC = (
 
   ctx.textAlign = "left";
 };
+
 export const drawNPCs = (
   player,
   mode = "play",

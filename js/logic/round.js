@@ -1,8 +1,8 @@
-// this file handles the hangman mechanics
-// handles word selection, letter guesses, hints, win/loss detection
+
 import { WORDS } from "../data/words.js";
 import { pick } from "../data/dialogue.js";
 import { MAX_MISSES } from "../constants.js";
+import { startQuestMusic } from "../systems/audio.js";
 
 export const Run = {
   level: 1,
@@ -14,9 +14,11 @@ export const Round = {
   s: null,
 
   make(n) {
-      const bonus = n.cat === "Boss" ? 0 : Run.level - 1;    
-      const fits = (word) =>
-      word[0] === n.cat && !Run.used.includes(word[1]);
+    const bonus = n.cat === "Boss" ? 0 : Run.level - 1;
+
+    const fits = word =>
+      word[0] === n.cat &&
+      !Run.used.includes(word[1]);
 
     let pool = WORDS.filter(
       word =>
@@ -34,18 +36,30 @@ export const Round = {
       pool = WORDS.filter(word => word[0] === n.cat);
     }
 
+    if (!pool.length) {
+      throw new Error(
+        `No words available for category: ${n.cat}`
+      );
+    }
+
     const selected = pick(pool);
 
     Run.used.push(selected[1]);
 
-    return {
+    if (n.cat !== "Boss") {
+      startQuestMusic();
+    }
+
+    this.s = {
       category: selected[0],
       clue: selected[2] || n.clue || "No clue available.",
       word: selected[1],
       guessed: [],
-      misses: 0
-      
+      misses: 0,
+      emergencyHintUsed: false
     };
+
+    return this.s;
   },
 
   triesLeft() {
@@ -62,20 +76,30 @@ export const Round = {
     if (this.s.guessed.includes(letter)) {
       return "repeat";
     }
+
     this.s.guessed.push(letter);
 
     if (this.s.word.includes(letter)) {
       return "hit";
     }
+
     this.s.misses++;
     return "miss";
   },
 
   hint(free) {
     const hiddenLetters = this.hidden();
+
+    if (hiddenLetters.length <= 1) {
+      return null;
+    }
+
     if (
-      hiddenLetters.length <= 1 ||
-      (!free && this.triesLeft() <= 1)
+      !free &&
+      (
+        this.s.emergencyHintUsed ||
+        this.triesLeft() <= 1
+      )
     ) {
       return null;
     }
@@ -85,6 +109,7 @@ export const Round = {
     this.s.guessed.push(letter);
 
     if (!free) {
+      this.s.emergencyHintUsed = true;
       this.s.misses++;
     }
 

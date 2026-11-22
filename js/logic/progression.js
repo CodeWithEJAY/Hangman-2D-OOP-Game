@@ -2,11 +2,38 @@
 import { NPCS } from "../data/npcs.js";
 import { Run } from "./round.js";
 
+const NPC_ROUND_REQUIREMENTS = {
+  "Luigi": 5,
+  "Jasmine": 5,
+  "Zed": 5,
+  "Erickson": 5,
+  "Gino": 5,
+  "Finn": 7,
+  "Zara": 5,
+  "Farmer Joe": 5
+};
+
+export const getRequiredRounds = npc => {
+  return NPC_ROUND_REQUIREMENTS[npc.name] || 1;
+};
+
+export const advanceNPCChallenge = npc => {
+  const required = getRequiredRounds(npc);
+
+  npc.roundsCompleted = Math.min(
+    (npc.roundsCompleted || 0) + 1,
+    required
+  );
+
+  return npc.roundsCompleted >= required;
+};
+
 export const initializeProgression = () => {
   NPCS.forEach(npc => {
     npc.state = 0;
     npc.round = null;
     npc.failed = false;
+    npc.roundsCompleted = 0;
   });
 
   Run.level = 1;
@@ -14,13 +41,14 @@ export const initializeProgression = () => {
   Run.used = [];
 };
 
-export const completeNPCQuest = (npc) => {
+export const completeNPCQuest = npc => {
   npc.state = 2;
   npc.round = null;
   npc.failed = false;
+  npc.roundsCompleted = getRequiredRounds(npc);
 };
 
-export const failNPCQuest = (npc) => {
+export const failNPCQuest = npc => {
   npc.round = null;
   npc.failed = true;
 };

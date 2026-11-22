@@ -302,130 +302,238 @@
              HOW TO PLAY
         =============================== -->
 
-        <section id="tut" class="screen-view ">
-            <div
-                class="content-panel"
-                role="dialog"
-                aria-labelledby="tutH"
-            >
-                <h2 id="tutH">HOW TO PLAY</h2>
+        <section id="tut" class="screen-view">
 
-                <div class="tutorial-grid">
+    <!-- PAGE 1: HOW TO PLAY -->
+    <div
+        class="content-panel"
+        role="dialog"
+        aria-labelledby="tutH"
+        data-tutorial-page="0"
+    >
+        <h2 id="tutH">HOW TO PLAY</h2>
 
-                    <!-- Step 1 -->
-                    <div class="tutorial-step">
-                        <h3>
-                            <span class="tutorial-step-number">1</span>
-                            EXPLORE
-                        </h3>
+        <div class="tutorial-grid">
 
-                        <div class="tutorial-visual">
-                            <span class="tutorial-key">A</span>
-                            <span class="tutorial-key">D</span>
-                            <span class="tutorial-arrow">·</span>
-                            <span class="tutorial-key wide">W</span>
-                        </div>
+            <!-- Step 1 -->
+            <div class="tutorial-step">
+                <h3>
+                    <span class="tutorial-step-number">1</span>
+                    EXPLORE
+                </h3>
 
-                        <p>
-                            Walk with A / D or arrows, jump with W or Space.
-                            Grab candies on the way!
-                        </p>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="tutorial-step">
-                        <h3>
-                            <span class="tutorial-step-number">2</span>
-                            TALK
-                        </h3>
-
-                        <div class="tutorial-visual">
-                            <span class="tutorial-marker">!</span>
-                            <span class="tutorial-arrow">›</span>
-                            <span class="tutorial-key">E</span>
-                        </div>
-
-                        <p>
-                            Stand next to a villager and press E.
-                            Everyone has something stuck.
-                        </p>
-                    </div>
-
-                    <!-- Step 3 -->
-                    <div class="tutorial-step">
-                        <h3>
-                            <span class="tutorial-step-number">3</span>
-                            SOLVE
-                        </h3>
-
-                        <div class="tutorial-visual">
-                            <span class="tutorial-letter">H</span>
-                            <span class="tutorial-letter">A</span>
-                            <span class="tutorial-letter"></span>
-                            <span class="tutorial-letter">K</span>
-                        </div>
-
-                        <p>
-                            Guess the hidden word to free it.
-                            Every wrong letter costs Hank a limb!
-                        </p>
-                    </div>
-
+                <div class="tutorial-visual">
+                    <span class="tutorial-key">A</span>
+                    <span class="tutorial-key">D</span>
+                    <span class="tutorial-arrow">·</span>
+                    <span class="tutorial-key wide">W</span>
                 </div>
 
-                <!-- Game information -->
-                <div class="tutorial-info-grid">
-
-                    <div class="tutorial-info-item">
-                        <span class="icon heart">♥</span>
-                        <span>3 hearts. Failing a word costs one.</span>
-                    </div>
-
-                    <div class="tutorial-info-item">
-                        <svg width="24" height="16" viewBox="0 0 12 8" shape-rendering="crispEdges">
-                            <rect x="0" y="2" width="3" height="4" fill="#ff6f9c"/>
-                            <rect x="9" y="2" width="3" height="4" fill="#ff6f9c"/>
-                            <rect x="3" y="0" width="6" height="8" fill="#ff6f9c"/>
-                            <rect x="5" y="0" width="1" height="8" fill="#fff"/>
-                        </svg>
-
-                        <span>5 candies buy a free hint.</span>
-                    </div>
-
-                    <div class="tutorial-info-item">
-                        <span class="icon star">★</span>
-                        <span>Free all 8 villagers to win.</span>
-                    </div>
-
-                </div>
-
-                <!-- Tutorial actions -->
-                <div class="content-panel-buttons">
-                    <button
-                        class="text-button"
-                        data-act="back"
-                    >
-                        ← Back
-                    </button>
-
-                    <button
-                        class="panel-action-button primary"
-                        data-act="go"
-                        id="goBtn"
-                    >
-                        LET’S GO!
-                    </button>
-                </div>
-
-                <p class="tutorial-footer">
-                    Enter = start · P = pause · Esc = back
+                <p>
+                    Walk with A / D or arrows, jump with W or Space.
+                    Grab candies on the way!
                 </p>
             </div>
-        </section>
 
-        <!-- ==============================
-             VILLAGER QUEST
-        =============================== -->
+            <!-- Step 2 -->
+            <div class="tutorial-step">
+                <h3>
+                    <span class="tutorial-step-number">2</span>
+                    TALK
+                </h3>
+
+                <div class="tutorial-visual">
+                    <span class="tutorial-marker">!</span>
+                    <span class="tutorial-arrow">›</span>
+                    <span class="tutorial-key">E</span>
+                </div>
+
+                <p>
+                    Stand next to a villager and press E.
+                    Everyone has something stuck.
+                </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="tutorial-step">
+                <h3>
+                    <span class="tutorial-step-number">3</span>
+                    SOLVE
+                </h3>
+
+                <div class="tutorial-visual">
+                    <span class="tutorial-letter">H</span>
+                    <span class="tutorial-letter">A</span>
+                    <span class="tutorial-letter">_</span>
+                    <span class="tutorial-letter">K</span>
+                </div>
+
+                <p>
+                    Guess the hidden word to free it.
+                    Every wrong letter costs Hank a limb!
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Game Information -->
+        <div class="tutorial-info-grid">
+
+            <div class="tutorial-info-item">
+                <span class="icon heart">♥</span>
+                <span>3 hearts. Failing a word costs one.</span>
+            </div>
+
+            <div class="tutorial-info-item">
+                <svg width="24" height="16" viewBox="0 0 12 8" shape-rendering="crispEdges">
+                    <rect x="0" y="2" width="3" height="4" fill="#ff6f9c"/>
+                    <rect x="9" y="2" width="3" height="4" fill="#ff6f9c"/>
+                    <rect x="3" y="0" width="6" height="8" fill="#ff6f9c"/>
+                    <rect x="5" y="0" width="1" height="8" fill="#fff"/>
+                </svg>
+
+                <span>15 candies reveal a letter.</span>
+            </div>
+
+            <div class="tutorial-info-item">
+                <span class="icon star">★</span>
+                <span>Free all 8 villagers to unlock the boss.</span>
+            </div>
+
+        </div>
+
+        <!-- Tutorial Actions -->
+        <div class="content-panel-buttons">
+            <button
+                class="text-button"
+                data-act="back"
+            >
+                ← Back
+            </button>
+
+            <button
+                class="panel-action-button primary"
+                data-tutorial-nav="next"
+            >
+                NEXT →
+            </button>
+        </div>
+
+        <p class="tutorial-footer">
+            Enter = start · P = pause · Esc = back
+        </p>
+    </div>
+
+
+    <!-- PAGE 2: GAME FEATURES -->
+    <div
+        class="content-panel"
+        role="dialog"
+        aria-labelledby="tutDetailsH"
+        data-tutorial-page="1"
+        hidden
+    >
+        <h2 id="tutDetailsH">YOUR ADVENTURE</h2>
+
+        <div class="tutorial-grid tutorial-details-grid">
+
+            <!-- Item Bag -->
+            <div class="tutorial-step">
+                <h3>
+                    <span class="tutorial-step-number">1</span>
+                    ITEM BAG
+                </h3>
+
+                <div class="tutorial-visual">
+                    <span class="tutorial-marker">BAG</span>
+                </div>
+
+                <p>
+                    View the items you've collected throughout your adventure.
+                </p>
+            </div>
+
+            <!-- Quest Items -->
+            <div class="tutorial-step">
+                <h3>
+                    <span class="tutorial-step-number">2</span>
+                    QUEST ITEMS
+                </h3>
+
+                <div class="tutorial-visual">
+                    <span class="tutorial-letter">KEY</span>
+                    <span class="tutorial-arrow">›</span>
+                    <span class="tutorial-letter">?</span>
+                </div>
+
+                <p>
+                    Collect special items to help villagers complete their quests.
+                </p>
+            </div>
+
+            <!-- Candies -->
+            <div class="tutorial-step">
+                <h3>
+                    <span class="tutorial-step-number">3</span>
+                    CANDIES
+                </h3>
+
+                <div class="tutorial-visual">
+                    <span class="tutorial-letter">15</span>
+                    <span class="tutorial-arrow">→</span>
+                    <span class="tutorial-letter">A</span>
+                </div>
+
+                <p>
+                    Use 15 candies to reveal a letter during a word challenge.
+                </p>
+            </div>
+
+            <!-- Town Records -->
+            <div class="tutorial-step">
+                <h3>
+                    <span class="tutorial-step-number">4</span>
+                    TOWN RECORDS
+                </h3>
+
+                <div class="tutorial-visual">
+                    <span class="tutorial-letter">★</span>
+                    <span class="tutorial-arrow">#</span>
+                    <span class="tutorial-letter">1</span>
+                </div>
+
+                <p>
+                    Your final score is recorded in the leaderboard.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Tutorial Actions -->
+        <div class="content-panel-buttons">
+            <button
+                class="text-button"
+                data-tutorial-nav="previous"
+            >
+                ← Previous
+            </button>
+
+            <button
+                class="panel-action-button primary"
+                data-act="go"
+                id="goBtn"
+            >
+                LET'S GO!
+            </button>
+        </div>
+
+        <p class="tutorial-footer">
+            You're ready. Good luck, Hank!
+        </p>
+    </div>
+
+</section>
+      
 
         <section id="quest" class="screen-view">
 
