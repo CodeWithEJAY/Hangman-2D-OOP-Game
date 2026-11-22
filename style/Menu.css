@@ -220,6 +220,13 @@
     margin: 18px 0 22px;
 }
 
+.leaderboard-podium:not(:has(.podium-place)) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
 .podium-place {
     display: flex;
     flex-direction: column;

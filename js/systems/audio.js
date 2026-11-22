@@ -1,9 +1,32 @@
 
 let audioContext = null;
 let masterGain = null;
-let musicGain = null;
 
-const getAudioContext = () => {
+let gameMusicGain = null;
+let questMusicGain = null;
+let bossMusicGain = null;
+
+const MENU_BGM_URL = new URL("../../assets/audio/load.mp3", import.meta.url).href;
+const GAME_BGM_URL = new URL("../../assets/audio/stardew.mp3", import.meta.url).href;
+const QUEST_BGM_URL = new URL("../../assets/audio/boss.mp3", import.meta.url).href;
+const BOSS_BGM_URL = new URL("../../assets/audio/boss.mp3", import.meta.url).href;
+
+let menuMusicAudio = null;
+let menuMusicRequested = false;
+let menuMusicFadeTimer = null;
+let menuMusicStopTimer = null;
+
+let gameTrack = null;
+let questTrack = null;
+let bossTrack = null;
+
+let gameMusicTimer = null;
+let gameMusicStep = 0;
+
+let bossMusicTimer = null;
+let bossMusicStep = 0;
+
+const createAudioContext = () => {
   if (!audioContext || audioContext.state === "closed") {
     const AudioContextClass =
       window.AudioContext || window.webkitAudioContext;
@@ -20,9 +43,17 @@ const getAudioContext = () => {
       masterGain.gain.value = 0.7;
       masterGain.connect(audioContext.destination);
 
-      musicGain = audioContext.createGain();
-      musicGain.gain.value = 0.0001;
-      musicGain.connect(masterGain);
+      gameMusicGain = audioContext.createGain();
+      gameMusicGain.gain.value = 0.0001;
+      gameMusicGain.connect(masterGain);
+
+      questMusicGain = audioContext.createGain();
+      questMusicGain.gain.value = 0.0001;
+      questMusicGain.connect(masterGain);
+
+      bossMusicGain = audioContext.createGain();
+      bossMusicGain.gain.value = 0.0001;
+      bossMusicGain.connect(masterGain);
     } catch (error) {
       console.error("Audio initialization failed:", error);
       return null;
@@ -38,14 +69,285 @@ const getAudioContext = () => {
   return audioContext;
 };
 
-export const unlockAudio = () => {
-  const audio = getAudioContext();
+const getTrackGain = trackName => {
+  if (trackName === "game") return gameMusicGain;
+  if (trackName === "quest") return questMusicGain;
+  if (trackName === "boss") return bossMusicGain;
 
-  if (audio?.state === "suspended") {
-    audio.resume().catch(error => {
-      console.warn("Audio unlock failed:", error);
+  return null;
+};
+
+const getTrack = trackName => {
+  if (trackName === "game") return gameTrack;
+  if (trackName === "quest") return questTrack;
+  if (trackName === "boss") return bossTrack;
+
+  return null;
+};
+
+const setTrack = (trackName, track) => {
+  if (trackName === "game") gameTrack = track;
+  if (trackName === "quest") questTrack = track;
+  if (trackName === "boss") bossTrack = track;
+};
+
+const fadeGainIn = (gainNode, volume, duration = 0.8) => {
+  const audio = createAudioContext();
+
+  if (!audio || !gainNode) return;
+
+  const now = audio.currentTime;
+
+  gainNode.gain.cancelScheduledValues(now);
+  gainNode.gain.setValueAtTime(
+    Math.max(0.0001, gainNode.gain.value),
+    now
+  );
+  gainNode.gain.linearRampToValueAtTime(
+    volume,
+    now + duration
+  );
+};
+
+const fadeGainOut = gainNode => {
+  if (!audioContext || !gainNode) return;
+
+  const now = audioContext.currentTime;
+
+  gainNode.gain.cancelScheduledValues(now);
+  gainNode.gain.setTargetAtTime(0.0001, now, 0.12);
+};
+
+const createMusicTrack = (url, gainNode) => {
+  const audio = createAudioContext();
+
+  if (!audio || !gainNode) return null;
+
+  const element = new Audio(url);
+  element.loop = true;
+  element.preload = "auto";
+
+  element.addEventListener("error", () => {
+    console.error("Could not load music:", url, element.error);
+  });
+
+  const source = audio.createMediaElementSource(element);
+  source.connect(gainNode);
+
+  return {
+    audio: element,
+    source,
+    gain: gainNode,
+    stopTimer: null,
+    starting: false,
+    requested: false
+  };
+};
+
+const startTrack = (
+  trackName,
+  url,
+  volume,
+  restart = false
+) => {
+  const audio = createAudioContext();
+
+  if (!audio) return;
+
+  const gainNode = getTrackGain(trackName);
+
+  if (!gainNode) return;
+
+  let track = getTrack(trackName);
+
+  if (!track) {
+    track = createMusicTrack(url, gainNode);
+
+    if (!track) return;
+
+    setTrack(trackName, track);
+  }
+
+  if (track.stopTimer !== null) {
+    window.clearTimeout(track.stopTimer);
+    track.stopTimer = null;
+  }
+
+  track.requested = true;
+
+  if (!track.audio.paused) {
+    fadeGainIn(track.gain, volume);
+    return;
+  }
+
+  if (track.starting) return;
+
+  if (restart) {
+    track.audio.currentTime = 0;
+  }
+
+  track.starting = true;
+
+  track.audio.play()
+    .then(() => {
+      track.starting = false;
+
+      if (track.requested) {
+        fadeGainIn(track.gain, volume);
+      } else {
+        track.audio.pause();
+      }
+    })
+    .catch(error => {
+      track.starting = false;
+      console.warn(`${trackName} music could not play:`, error);
+    });
+};
+
+const stopTrack = track => {
+  if (!track) return;
+
+  track.requested = false;
+  fadeGainOut(track.gain);
+
+  if (track.stopTimer !== null) {
+    window.clearTimeout(track.stopTimer);
+  }
+
+  track.stopTimer = window.setTimeout(() => {
+    if (!track.requested) {
+      track.audio.pause();
+      track.audio.currentTime = 0;
+    }
+
+    track.stopTimer = null;
+  }, 650);
+};
+
+// MENU MUSIC
+
+const fadeMenuMusic = (
+  targetVolume,
+  duration = 650,
+  onComplete = null
+) => {
+  if (!menuMusicAudio) return;
+
+  if (menuMusicFadeTimer !== null) {
+    window.clearInterval(menuMusicFadeTimer);
+    menuMusicFadeTimer = null;
+  }
+
+  const startingVolume = menuMusicAudio.volume;
+  const startTime = performance.now();
+
+  menuMusicFadeTimer = window.setInterval(() => {
+    if (!menuMusicAudio) {
+      window.clearInterval(menuMusicFadeTimer);
+      menuMusicFadeTimer = null;
+      return;
+    }
+
+    const elapsed = performance.now() - startTime;
+    const progress = Math.min(1, elapsed / duration);
+
+    menuMusicAudio.volume =
+      startingVolume + (targetVolume - startingVolume) * progress;
+
+    if (progress >= 1) {
+      window.clearInterval(menuMusicFadeTimer);
+      menuMusicFadeTimer = null;
+
+      if (onComplete) onComplete();
+    }
+  }, 25);
+};
+
+const attemptMenuMusicPlayback = () => {
+  if (!menuMusicRequested || !menuMusicAudio) return;
+
+  if (!menuMusicAudio.paused) {
+    fadeMenuMusic(0.48, 800);
+    return;
+  }
+
+  menuMusicAudio.play()
+    .then(() => {
+      if (menuMusicRequested) {
+        fadeMenuMusic(0.48, 800);
+      }
+    })
+    .catch(error => {
+      console.warn("Menu music is waiting for user interaction:", error);
+    });
+};
+
+export const startMenuMusic = () => {
+  stopGameMusic();
+  stopQuestMusic();
+  stopBossMusic();
+
+  if (menuMusicStopTimer !== null) {
+    window.clearTimeout(menuMusicStopTimer);
+    menuMusicStopTimer = null;
+  }
+
+  if (menuMusicFadeTimer !== null) {
+    window.clearInterval(menuMusicFadeTimer);
+    menuMusicFadeTimer = null;
+  }
+
+  if (!menuMusicAudio) {
+    menuMusicAudio = new Audio(MENU_BGM_URL);
+    menuMusicAudio.loop = true;
+    menuMusicAudio.preload = "auto";
+    menuMusicAudio.volume = 0;
+
+    menuMusicAudio.addEventListener("error", () => {
+      console.error("Could not load menu music:", menuMusicAudio?.src);
     });
   }
+
+  menuMusicRequested = true;
+  menuMusicAudio.currentTime = 0;
+  menuMusicAudio.volume = 0;
+
+  attemptMenuMusicPlayback();
+};
+
+export const stopMenuMusic = () => {
+  menuMusicRequested = false;
+
+  if (!menuMusicAudio) return;
+
+  if (menuMusicStopTimer !== null) {
+    window.clearTimeout(menuMusicStopTimer);
+    menuMusicStopTimer = null;
+  }
+
+  fadeMenuMusic(0, 600, () => {
+    if (menuMusicAudio && !menuMusicRequested) {
+      menuMusicAudio.pause();
+      menuMusicAudio.currentTime = 0;
+    }
+  });
+
+  menuMusicStopTimer = window.setTimeout(() => {
+    if (menuMusicAudio && !menuMusicRequested) {
+      menuMusicAudio.pause();
+      menuMusicAudio.currentTime = 0;
+      menuMusicAudio.volume = 0;
+    }
+
+    menuMusicStopTimer = null;
+  }, 700);
+};
+
+// AUDIO UNLOCK
+
+export const unlockAudio = () => {
+  createAudioContext();
+  attemptMenuMusicPlayback();
 };
 
 if (typeof window !== "undefined") {
@@ -56,29 +358,96 @@ if (typeof window !== "undefined") {
 export const setSoundEnabled = () => unlockAudio();
 export const isSoundEnabled = () => true;
 
-const fadeMusicIn = (volume = 0.95) => {
-  const audio = getAudioContext();
+// EXPLORATION MUSIC
 
-  if (!audio || !musicGain) return;
+export const startGameMusic = () => {
+  stopMenuMusic();
+  stopQuestMusic();
+  stopBossMusic();
 
-  const now = audio.currentTime;
-
-  musicGain.gain.cancelScheduledValues(now);
-  musicGain.gain.setValueAtTime(
-    Math.max(0.0001, musicGain.gain.value),
-    now
+  startTrack(
+    "game",
+    GAME_BGM_URL,
+    0.55,
+    true
   );
-  musicGain.gain.linearRampToValueAtTime(volume, now + 0.8);
 };
 
-const fadeMusicOut = () => {
-  if (!audioContext || !musicGain) return;
+export const pauseGameMusic = () => {
+  if (!gameTrack || gameTrack.audio.paused) return;
 
-  const now = audioContext.currentTime;
+  gameTrack.requested = false;
+  fadeGainOut(gameTrack.gain);
 
-  musicGain.gain.cancelScheduledValues(now);
-  musicGain.gain.setTargetAtTime(0.0001, now, 0.12);
+  if (gameTrack.stopTimer !== null) {
+    window.clearTimeout(gameTrack.stopTimer);
+  }
+
+  gameTrack.stopTimer = window.setTimeout(() => {
+    if (!gameTrack.requested) {
+      gameTrack.audio.pause();
+    }
+
+    gameTrack.stopTimer = null;
+  }, 650);
 };
+
+export const resumeGameMusic = () => {
+  stopMenuMusic();
+  stopQuestMusic();
+  stopBossMusic();
+
+  startTrack(
+    "game",
+    GAME_BGM_URL,
+    0.55,
+    false
+  );
+};
+
+export const stopGameMusic = () => {
+  stopTrack(gameTrack);
+};
+
+// REGULAR NPC QUEST MUSIC
+
+export const startQuestMusic = () => {
+  stopMenuMusic();
+  stopGameMusic();
+  stopBossMusic();
+
+  startTrack(
+    "quest",
+    QUEST_BGM_URL,
+    0.55,
+    false
+  );
+};
+
+export const stopQuestMusic = () => {
+  stopTrack(questTrack);
+};
+
+// BOSS FIGHT MUSIC
+
+export const startBossMusic = () => {
+  stopMenuMusic();
+  stopGameMusic();
+  stopQuestMusic();
+
+  startTrack(
+    "boss",
+    BOSS_BGM_URL,
+    0.62,
+    false
+  );
+};
+
+export const stopBossMusic = () => {
+  stopTrack(bossTrack);
+};
+
+// SOUND EFFECTS
 
 const playTone = (
   frequency,
@@ -87,11 +456,13 @@ const playTone = (
   volume = 0.08,
   endFrequency = frequency,
   delay = 0,
-  output = masterGain
+  output = null
 ) => {
-  const audio = getAudioContext();
+  const audio = createAudioContext();
 
-  if (!audio || !output) return;
+  const destination = output || masterGain;
+
+  if (!audio || !destination) return;
 
   const now = audio.currentTime + delay;
   const oscillator = audio.createOscillator();
@@ -110,17 +481,17 @@ const playTone = (
   );
 
   gain.gain.setValueAtTime(0.0001, now);
-  
-const finalVolume = output === musicGain
-  ? Math.min(volume * 3, 0.18)
-  : volume;
 
-gain.gain.exponentialRampToValueAtTime(
-  Math.max(0.0002, finalVolume),
-  now + Math.min(0.025, duration / 3)
-);
+  const finalVolume = destination === bossMusicGain
+    ? Math.min(volume * 3, 0.18)
+    : volume;
 
-gain.gain.setValueAtTime(finalVolume, now);
+  gain.gain.exponentialRampToValueAtTime(
+    Math.max(0.0002, finalVolume),
+    now + Math.min(0.025, duration / 3)
+  );
+
+  gain.gain.setValueAtTime(finalVolume, now);
 
   gain.gain.exponentialRampToValueAtTime(
     0.0001,
@@ -128,7 +499,7 @@ gain.gain.setValueAtTime(finalVolume, now);
   );
 
   oscillator.connect(gain);
-  gain.connect(output);
+  gain.connect(destination);
 
   oscillator.start(now);
   oscillator.stop(now + duration + 0.02);
@@ -180,316 +551,18 @@ export const playDialogueBlip = (isBoss = false, character = "") => {
   );
 };
 
-let gameMusicTimer = null;
-let gameMusicStep = 0;
-
-export const startGameMusic = () => {
-  stopGameMusic();
-  stopBossMusic();
-  unlockAudio();
-
-  const audio = getAudioContext();
-
-  if (!audio || !musicGain) return;
-
-  gameMusicStep = 0;
-  fadeMusicIn(0.55);
-
-  const melody = [
-    523.25, null, 659.25, 784,
-    698.46, null, 659.25, 587.33,
-    523.25, null, 587.33, 659.25,
-    784, null, 659.25, 587.33
-  ];
-
-  const bass = [
-    130.81, null, null, null,
-    196, null, null, null,
-    110, null, null, null,
-    174.61, null, null, null
-  ];
-
-  const harmony = [
-    261.63, null, null, 392,
-    null, 349.23, null, 440,
-    220, null, null, 329.63,
-    null, 349.23, null, 261.63
-  ];
-
-  const playStep = () => {
-    const step = gameMusicStep % 16;
-
-    if (bass[step] !== null) {
-      playTone(
-        bass[step],
-        0.42,
-        "triangle",
-        0.055,
-        bass[step] * 0.97,
-        0,
-        musicGain
-      );
-    }
-
-    if (melody[step] !== null) {
-      playTone(
-        melody[step],
-        0.19,
-        "triangle",
-        0.045,
-        melody[step] * 0.99,
-        0,
-        musicGain
-      );
-    }
-
-    if (harmony[step] !== null) {
-      playTone(
-        harmony[step],
-        0.28,
-        "sine",
-        0.025,
-        harmony[step] * 0.98,
-        0,
-        musicGain
-      );
-    }
-
-    if (step === 0 || step === 8) {
-      playTone(
-        82,
-        0.2,
-        "sine",
-        0.055,
-        38,
-        0,
-        musicGain
-      );
-    }
-
-    if (step === 4 || step === 12) {
-      playNoise(
-        0.10,
-        0.025,
-        2200,
-        0,
-        musicGain
-      );
-    }
-
-    if (step % 2 === 1) {
-      playNoise(
-        0.035,
-        0.009,
-        6000,
-        0,
-        musicGain
-      );
-    }
-
-    gameMusicStep++;
-  };
-
-  playStep();
-  gameMusicTimer = window.setInterval(playStep, 250);
-};
-
-export const stopGameMusic = () => {
-  if (gameMusicTimer !== null) {
-    window.clearInterval(gameMusicTimer);
-    gameMusicTimer = null;
-  }
-
-  gameMusicStep = 0;
-  fadeMusicOut();
-};
-
-let bossMusicTimer = null;
-let bossMusicStep = 0;
-
-export const startBossMusic = () => {
-  stopGameMusic();
-  stopBossMusic();
-  unlockAudio();
-
-  const audio = getAudioContext();
-
-  if (!audio || !musicGain) return;
-
-  bossMusicStep = 0;
-  fadeMusicIn(0.62);
-
-  const melody = [
-    233.08, null, 277.18, 311.13,
-    233.08, null, 207.65, 311.13,
-    196, null, 233.08, 277.18,
-    311.13, null, 277.18, 233.08
-  ];
-
-  const bass = [
-    55, null, 55, null,
-    65.41, null, 65.41, null,
-    49, null, 49, null,
-    58.27, null, 58.27, null
-  ];
-
-  const highMelody = [
-    466.16, null, null, 622.25,
-    null, null, 415.30, null,
-    392, null, null, 554.37,
-    null, 466.16, null, null
-  ];
-
-  const playStep = () => {
-    const step = bossMusicStep % 16;
-
-    if (bass[step] !== null) {
-      playTone(
-        bass[step],
-        0.34,
-        "sawtooth",
-        0.075,
-        bass[step] * 0.94,
-        0,
-        musicGain
-      );
-
-      playTone(
-        bass[step] * 2,
-        0.24,
-        "triangle",
-        0.035,
-        bass[step] * 1.85,
-        0,
-        musicGain
-      );
-    }
-
-    if (melody[step] !== null) {
-      playTone(
-        melody[step],
-        0.16,
-        "sawtooth",
-        0.055,
-        melody[step] * 0.96,
-        0,
-        musicGain
-      );
-
-      playTone(
-        melody[step] * 2,
-        0.11,
-        "square",
-        0.022,
-        melody[step] * 1.9,
-        0.015,
-        musicGain
-      );
-    }
-
-    if (highMelody[step] !== null) {
-      playTone(
-        highMelody[step],
-        0.12,
-        "square",
-        0.025,
-        highMelody[step] * 0.98,
-        0,
-        musicGain
-      );
-    }
-
-    if (step === 0 || step === 8) {
-      playTone(
-        110,
-        0.28,
-        "sawtooth",
-        0.065,
-        35,
-        0,
-        musicGain
-      );
-
-      playTone(
-        55,
-        0.35,
-        "sine",
-        0.065,
-        28,
-        0,
-        musicGain
-      );
-    }
-
-    if (step === 4 || step === 12) {
-      playNoise(
-        0.14,
-        0.055,
-        2600,
-        0,
-        musicGain
-      );
-
-      playTone(
-        155,
-        0.12,
-        "square",
-        0.035,
-        75,
-        0,
-        musicGain
-      );
-    }
-
-    if (step % 2 === 1) {
-      playNoise(
-        0.045,
-        0.014,
-        7500,
-        0,
-        musicGain
-      );
-    }
-
-    if (step === 0 || step === 8) {
-      playTone(
-        164.81,
-        0.18,
-        "sawtooth",
-        0.025,
-        82.41,
-        0.04,
-        musicGain
-      );
-    }
-
-    bossMusicStep++;
-  };
-
-  playStep();
-  bossMusicTimer = window.setInterval(playStep, 175);
-};
-
-export const stopBossMusic = () => {
-  if (bossMusicTimer !== null) {
-    window.clearInterval(bossMusicTimer);
-    bossMusicTimer = null;
-  }
-
-  bossMusicStep = 0;
-  fadeMusicOut();
-};
-
 const playNoise = (
   duration = 0.2,
   volume = 0.08,
   filterFrequency = 1000,
   delay = 0,
-  output = masterGain
+  output = null
 ) => {
-  const audio = getAudioContext();
+  const audio = createAudioContext();
 
-  if (!audio || !output) return;
+  const destination = output || masterGain;
+
+  if (!audio || !destination) return;
 
   const now = audio.currentTime + delay;
   const sampleRate = audio.sampleRate;
@@ -527,7 +600,7 @@ const playNoise = (
 
   source.connect(filter);
   filter.connect(gain);
-  gain.connect(output);
+  gain.connect(destination);
 
   source.start(now);
   source.stop(now + duration + 0.02);
@@ -616,14 +689,54 @@ export const playBossDefeatSound = () => {
   playTone(660, 0.65, "triangle", 0.10, 880, 0.68);
 };
 
+// STOP ALL AUDIO
+
 export const stopAudio = () => {
-  stopGameMusic();
-  stopBossMusic();
+  menuMusicRequested = false;
+
+  if (menuMusicFadeTimer !== null) {
+    window.clearInterval(menuMusicFadeTimer);
+    menuMusicFadeTimer = null;
+  }
+
+  if (menuMusicStopTimer !== null) {
+    window.clearTimeout(menuMusicStopTimer);
+    menuMusicStopTimer = null;
+  }
+
+  if (menuMusicAudio) {
+    menuMusicAudio.pause();
+    menuMusicAudio.currentTime = 0;
+    menuMusicAudio = null;
+  }
+
+  [gameTrack, questTrack, bossTrack].forEach(track => {
+    if (!track) return;
+
+    if (track.stopTimer !== null) {
+      window.clearTimeout(track.stopTimer);
+    }
+
+    track.audio.pause();
+    track.audio.currentTime = 0;
+  });
+
+  gameTrack = null;
+  questTrack = null;
+  bossTrack = null;
+
+  gameMusicTimer = null;
+  gameMusicStep = 0;
+  bossMusicTimer = null;
+  bossMusicStep = 0;
 
   if (audioContext) {
     audioContext.close();
     audioContext = null;
+
     masterGain = null;
-    musicGain = null;
+    gameMusicGain = null;
+    questMusicGain = null;
+    bossMusicGain = null;
   }
 };

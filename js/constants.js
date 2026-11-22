@@ -4,7 +4,7 @@ export const HINT_COST = 5;
 export const CANVAS_WIDTH = 800;
 export const CANVAS_HEIGHT = 450;
 
-export const GROUND_Y = 370;
+export const GROUND_Y = 330;
 export const WORLD_WIDTH = 5400;
 export const TRUCK_X = 1450;
 

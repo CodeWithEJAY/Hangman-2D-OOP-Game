@@ -25,7 +25,9 @@ import {
   completeNPCQuest,
   failNPCQuest,
   areAllQuestsComplete,
-  getQuestProgress
+  getQuestProgress,
+  advanceNPCChallenge,
+  getRequiredRounds
 } from "./logic/progression.js";
 
 import {
@@ -88,7 +90,8 @@ import {
   startBossMusic,
   stopBossMusic,
    startGameMusic,
-  stopGameMusic
+  stopGameMusic,
+  startMenuMusic
 } from "./systems/audio.js";
 
 import { QUEST_ITEMS } from "./data/items.js";
@@ -127,6 +130,7 @@ cameraPanTarget: null
 };
 const completedNPCNames = new Set();
 const npcIntroSeen = new Set();
+
 
 
 let inventoryExpanded = false;
@@ -1025,21 +1029,25 @@ const interact = () => {
     closeDialogue(true);
   }
 
+  const isCompleted =
+    npc.state === 2 ||
+    completedNPCNames.has(npc.name);
+
   let action = "close";
 
-if (
-  npc.state !== 2 &&
-  (npc.failed || npc.round || hasQuestItem(npc))
-) {
-  action = "startQuest";
-}
+  if (
+    !isCompleted &&
+    (npc.failed || npc.round || hasQuestItem(npc))
+  ) {
+    action = "startQuest";
+  }
 
-const hasSeenIntro = npcIntroSeen.has(npc.name);
-const messages = getQuestDialogue(npc, hasSeenIntro);
+  const hasSeenIntro = npcIntroSeen.has(npc.name);
+  const messages = getQuestDialogue(npc, hasSeenIntro);
 
-npcIntroSeen.add(npc.name);
+  npcIntroSeen.add(npc.name);
 
-openDialogue(npc, messages, action);
+  openDialogue(npc, messages, action);
 };
 
 const updateDialogueDistance = () => {
@@ -1357,11 +1365,44 @@ const completeQuest = () => {
   if (!npc || !Round.s) return;
 
   const points = calculateQuestScore(Round.triesLeft());
+  const requiredRounds = getRequiredRounds(npc);
 
-  // Release the captive
+  const npcQuestComplete = advanceNPCChallenge(npc);
+
+  game.score += points;
+
+  clearTimeout(successTimer);
+  successTimer = null;
+
+  if (!npcQuestComplete) {
+    npc.failed = false;
+    npc.round = null;
+
+    clearQuestResult();
+
+    npc.round = Round.make(npc);
+    Round.s = npc.round;
+
+    game.activeNPC = npc;
+    game.mode = "quest";
+
+    setInputMode("guess");
+
+    showToast(
+      `${npc.name}: Challenge ${npc.roundsCompleted}/${requiredRounds} complete! Get ready for the next one!`
+    );
+
+    renderQuest();
+    updateHUD();
+
+    return;
+  }
+
   npc.ft = performance.now() / 1000;
+
   completeNPCQuest(npc);
   completedNPCNames.add(npc.name);
+
   const rewardItem = grantQuestItem(npc.rewardItem);
 
   const allQuestsDone = areAllQuestsComplete();
@@ -1370,15 +1411,12 @@ const completeQuest = () => {
     game.boss.unlocked = true;
   }
 
-  // Award rewards
-  game.score += points;
   game.keys++;
   game.completed++;
   game.candies += 5;
 
   playQuestCompleteSound();
 
-  // Release particles
   burst(
     npc.x + (npc.bx || 40),
     npc.by || GROUND_Y - 35,
@@ -1387,38 +1425,35 @@ const completeQuest = () => {
   );
 
   const itemMessage = rewardItem
-  ? ` RECEIVED ${rewardItem.icon} ${rewardItem.name}!`
-  : "";
+    ? ` RECEIVED ${rewardItem.icon} ${rewardItem.name}!`
+    : "";
 
-showToast(
-  `${npc.free} +${points} points +5 candies +1 key.${itemMessage}`
-);
+  showToast(
+    `${npc.free} +${points} points +5 candies +1 key.${itemMessage}`
+  );
 
-  // Clear the completed round
   npc.round = null;
   npc.failed = false;
-
-  clearTimeout(successTimer);
-  successTimer = null;
 
   clearQuestResult();
 
   Round.s = null;
   game.activeNPC = null;
   game.mode = "play";
+
   setInputMode("world");
-renderInventoryHUD();
+
+  renderInventoryHUD();
+
   showScreen(null);
   updateHUD();
 
-  // Show NPC completion dialogue
   window.setTimeout(() => {
     if (game.mode === "play") {
       openDialogue(npc, npc.done);
     }
   }, 300);
 
-  // Unlock notification
   if (allQuestsDone) {
     window.setTimeout(() => {
       if (game.boss.unlocked && !game.boss.defeated) {
@@ -1429,7 +1464,6 @@ renderInventoryHUD();
     }, 2300);
   }
 };
-
 const clearQuestResult = () => {
   if (resultTimer !== null) {
     clearTimeout(resultTimer);
@@ -1721,14 +1755,49 @@ const confirmPlayerName = () => {
   startTutorial();
 };
 
-const startTutorial = () => {
-  closeDialogue();
-  game.mode = "tutorial";
-  showScreen("tut");
-};
+function setTutorialPage(page) {
+    const pages = document.querySelectorAll(
+        "#tut [data-tutorial-page]"
+    );
 
+    pages.forEach((element, index) => {
+        element.hidden = index !== page;
+    });
+}
+
+function setupTutorialNavigation() {
+    const tutorial = getElement("tut");
+
+    if (!tutorial || tutorial.dataset.navigationReady) return;
+
+    tutorial.dataset.navigationReady = "true";
+
+    tutorial.addEventListener("click", event => {
+        const button = event.target.closest("[data-tutorial-nav]");
+
+        if (!button) return;
+
+        if (button.dataset.tutorialNav === "next") {
+            setTutorialPage(1);
+        }
+
+        if (button.dataset.tutorialNav === "previous") {
+            setTutorialPage(0);
+        }
+    });
+}
+
+const startTutorial = () => {
+    game.mode = "tutorial";
+
+    setupTutorialNavigation();
+    setTutorialPage(0);
+
+    showScreen("tut");
+};
 const startNewGame = () => {
   window.clearTimeout(questFinishTimer);
+
   document.body.classList.remove("boss-fight-active");
 
   initializeProgression();
@@ -1744,7 +1813,8 @@ const startNewGame = () => {
   game.elapsedTime = 0;
   game.activeNPC = null;
   game.inventory = [];
-    clearInterval(game.boss.timer);
+
+  clearInterval(game.boss.timer);
 
   game.boss.unlocked = false;
   game.boss.hp = BOSS.maxHP;
@@ -1754,19 +1824,23 @@ const startNewGame = () => {
   game.boss.active = false;
   game.boss.defeated = false;
   game.boss.revealed = false;
-game.boss.revealStartedAt = null;
-game.boss.revealed = false;
-game.boss.revealStartedAt = null;
-game.boss.revealCutsceneActive = false;
-game.boss.cameraPanFrom = null;
-game.boss.landingSoundPlayed = false;
-game.boss.cameraPanTarget = null;
-stopBossMusic();
-startGameMusic();
-npcIntroSeen.clear();
-completedNPCNames.clear();
+  game.boss.revealStartedAt = null;
+  game.boss.revealCutsceneActive = false;
+  game.boss.cameraPanFrom = null;
+  game.boss.landingSoundPlayed = false;
+  game.boss.cameraPanTarget = null;
+
+  stopBossMusic();
+  startGameMusic();
+
+  npcIntroSeen.clear();
+  completedNPCNames.clear();
+
+
+  console.log("New quest order:", game.questOrder);
 
   game.mode = "play";
+
   renderInventoryHUD();
   setInputMode("world");
 
@@ -2257,6 +2331,7 @@ export const initializeGame = () => {
   setSoundEnabled(true);
   initializeCanvas();
   initializeProgression();
+  startMenuMusic()
   initializeInput();
 
   const menuArt = getElement("menuArt");
@@ -2332,3 +2407,43 @@ const bossDamageAnimation = () => {
     boss.classList.remove("hit");
   }, 700);
 };
+
+
+export function testStartBossFight() {
+  const npcNames = [
+    "Luigi",
+    "Jasmine",
+    "Zed",
+    "Erickson",
+    "Gino",
+    "Finn",
+    "Zara",
+    "Farmer Joe"
+  ];
+
+  completedNPCNames.clear();
+
+  npcNames.forEach(name => {
+    completedNPCNames.add(name);
+  });
+
+  game.completed = npcNames.length;
+
+  if (game.boss.timer) {
+    clearInterval(game.boss.timer);
+  }
+
+  game.boss.unlocked = true;
+  game.boss.defeated = false;
+  game.boss.active = false;
+  game.boss.hp = game.boss.maxHP;
+  game.boss.round = null;
+  game.boss.timer = null;
+  game.boss.revealed = false;
+  game.boss.revealCutsceneActive = false;
+  game.boss.roundTransitioning = false;
+
+  startBossQuest();
+}
+
+window.testBossFight = testStartBossFight;
