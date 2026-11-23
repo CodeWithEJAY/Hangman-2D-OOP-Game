@@ -78,7 +78,8 @@ const handleKeyDown = event => {
     return;
   }
 
-  // Allow normal typing inside input fields
+  // this is here coz theres a switch case where specific key are binded to specifc action this to make the 
+  // to make all keyboard work if in quest
   if (isTypingTarget(event.target)) {
     return;
   }

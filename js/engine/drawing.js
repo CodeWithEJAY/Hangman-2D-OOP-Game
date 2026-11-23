@@ -1,11 +1,14 @@
 import { ctx, camera } from "./canvas.js";
+
 import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
   GROUND_Y,
   TRUCK_X
 } from "../constants.js";
+
 import { PLATS } from "../data/world.js";
+import { BOSS } from "../data/npcs.js";
 
 const W = CANVAS_WIDTH;
 const H = CANVAS_HEIGHT;
@@ -48,6 +51,7 @@ const smoothStep = (start, end, value) => {
 
 const getDayCycle = time => {
   const cycleDuration = 200;
+
   const progress =
     ((time % cycleDuration) + cycleDuration) %
     cycleDuration / cycleDuration;
@@ -170,7 +174,6 @@ const drawSky = (time, night = 0, sunset = 0, sunrise = 0) => {
     rc(x, y, 90, 16, cloudColor);
     rc(x + 16, y - 12, 44, 14, cloudColor);
     rc(x + 8, y + 16, 70, 6, cloudShade);
-
     rc(x + 22, y - 9, 12, 3, "#ffffff");
     rc(x + 48, y + 2, 18, 3, "#ffffff");
   }
@@ -191,7 +194,6 @@ const drawSky = (time, night = 0, sunset = 0, sunrise = 0) => {
     }
 
     ctx.globalAlpha = night;
-
     ctx.fillStyle = "#fff1bd";
     ctx.beginPath();
     ctx.arc(W - 105, 58, 19, 0, Math.PI * 2);
@@ -236,6 +238,7 @@ const drawBirds = (time, night = 0) => {
 
     for (let bird = 0; bird < 3; bird++) {
       const x = Math.round(groupX + bird * 13);
+
       const y = Math.round(
         groupY + bird * 3 + Math.sin(time * 2 + bird) * 2
       );
@@ -259,7 +262,6 @@ const drawBirds = (time, night = 0) => {
 
 const drawBuildings = (night = 0, sunset = 0, sunrise = 0) => {
   const firstBuilding = Math.floor((camera.x * 0.3) / 140);
-
   const twilight = Math.max(sunset, sunrise);
 
   let buildingColor = blendColor(
@@ -323,15 +325,13 @@ const drawBuildings = (night = 0, sunset = 0, sunrise = 0) => {
 const drawTrees = (night = 0) => {
   const trunk = blendColor("#7a4a2b", "#57404a", night);
   const trunkHighlight = blendColor("#a76a3c", "#765568", night);
-
   const leafDark = blendColor("#328638", "#24483c", night);
   const leafMid = blendColor("#3f9f3a", "#315b43", night);
   const leafLight = blendColor("#4fae3a", "#42734a", night);
   const leafHighlight = blendColor("#7be05a", "#72996a", night);
 
   for (let i = 0; i < 22; i++) {
-    const x = 250 + i * 520;
-    const sx = px(x);
+    const sx = px(250 + i * 520);
 
     if (sx < -120 || sx > W + 120) continue;
 
@@ -340,7 +340,6 @@ const drawTrees = (night = 0) => {
 
     rc(sx - 4, GY - 92, 58, 34, leafDark);
     rc(sx - 4, GY - 92, 58, 31, leafMid);
-
     rc(sx + 6, GY - 116, 38, 28, leafLight);
 
     rc(sx + 10, GY - 110, 12, 6, leafHighlight);
@@ -360,17 +359,14 @@ const drawBushes = (night = 0) => {
   const highlight = blendColor("#8be05a", "#72996a", night);
 
   for (let i = 0; i < 40; i++) {
-    const x = 80 + i * 190;
-    const sx = px(x);
+    const sx = px(80 + i * 190);
 
     if (sx < -60 || sx > W + 60 || i % 3 === 2) continue;
 
     rc(sx, GY - 14, 36, 14, dark);
     rc(sx + 2, GY - 14, 32, 12, base);
-
     rc(sx + 6, GY - 22, 24, 10, light);
     rc(sx + 10, GY - 20, 6, 4, highlight);
-
     rc(sx + 23, GY - 17, 5, 3, dark);
     rc(sx + 2, GY - 9, 6, 4, dark);
   }
@@ -380,8 +376,7 @@ const drawFlowers = (night = 0) => {
   const stem = blendColor("#3f9f3a", "#315441", night);
 
   for (let i = 0; i < 62; i++) {
-    const x = 60 + i * 97;
-    const sx = px(x);
+    const sx = px(60 + i * 97);
 
     if (sx < -10 || sx > W + 10 || i % 4) continue;
 
@@ -464,15 +459,20 @@ const drawGrassDetails = (night = 0) => {
   }
 };
 
-const drawStreetLights = (night = 0, sunset = 0, sunrise = 0) => {
-  const lightLevel = Math.max(
+const drawStreetLights = (
+  night = 0,
+  sunset = 0,
+  sunrise = 0,
+  time = 0,
+  bossAwakening = 0
+) => {
+  const baseLightLevel = Math.max(
     night,
     sunset * 0.65,
     sunrise * 0.65
   );
 
   const firstLamp = Math.floor((camera.x - 300) / 620);
-
   const pole = blendColor("#665b5a", "#39394e", night);
   const poleHighlight = blendColor("#a28a76", "#62546a", night);
   const frame = blendColor("#514b55", "#33334a", night);
@@ -485,31 +485,42 @@ const drawStreetLights = (night = 0, sunset = 0, sunrise = 0) => {
 
     const top = GY - 82;
 
+    const flickerWave = Math.sin(time * 19 + i * 4.7);
+    const flickerNoise = Math.sin(time * 37 + i * 8.3);
+
+    const flicker =
+      flickerWave > -0.15 && flickerNoise > -0.55
+        ? 1
+        : 0.08;
+
+    const effectiveFlicker =
+      1 - bossAwakening + bossAwakening * flicker;
+
+    const lightLevel = baseLightLevel * effectiveFlicker;
+
     if (lightLevel > 0.02) {
       ctx.save();
-
       ctx.globalAlpha = lightLevel * 0.10;
       rc(sx - 13, top - 11, 33, 30, "#ffd88a");
       rc(sx - 7, top - 17, 21, 43, "#ffd88a");
-
       ctx.restore();
     }
 
     rc(sx, top + 10, 5, 72, pole);
     rc(sx + 1, top + 11, 2, 68, poleHighlight);
-
     rc(sx - 5, GY - 3, 15, 4, frame);
-
     rc(sx - 3, top + 7, 11, 4, frame);
     rc(sx + 5, top + 1, 5, 8, frame);
     rc(sx + 7, top - 2, 16, 4, pole);
-
     rc(sx + 13, top - 10, 16, 13, frame);
-    rc(sx + 16, top - 7, 10, 7, blendColor(
-      "#b9d5d7",
-      "#ffd77d",
-      lightLevel
-    ));
+
+    rc(
+      sx + 16,
+      top - 7,
+      10,
+      7,
+      blendColor("#b9d5d7", "#ffd77d", lightLevel)
+    );
 
     rc(sx + 12, top - 11, 18, 3, frame);
     rc(sx + 13, top + 1, 16, 3, frame);
@@ -523,6 +534,93 @@ const drawStreetLights = (night = 0, sunset = 0, sunrise = 0) => {
   }
 };
 
+/* ---------- PLATFORM DECORATIONS ---------- */
+
+const drawPlatformFlowers = (sx, y, w, index, night) => {
+  const stem = blendColor("#3f9f3a", "#315441", night);
+  const leaf = blendColor("#69c441", "#315b43", night);
+
+  const flowerColors = [
+    "#ff9ac1",
+    "#ffd166",
+    "#ffffff",
+    "#c5a5ff",
+    "#ff8a78"
+  ];
+
+  const flowerCount = w >= 130 ? 2 : 1;
+
+  for (let i = 0; i < flowerCount; i++) {
+    const flowerX = i === 0
+      ? sx + 15
+      : sx + w - 22;
+
+    const flowerColor = flowerColors[
+      (index + i * 2) % flowerColors.length
+    ];
+
+    const flowerY = y - 18 - ((index + i) % 2) * 3;
+
+    rc(flowerX, y - 6, 2, 7, stem);
+    rc(flowerX - 4, y - 5, 4, 2, leaf);
+    rc(flowerX + 2, y - 3, 4, 2, leaf);
+
+    rc(flowerX - 3, flowerY + 2, 3, 3, flowerColor);
+    rc(flowerX + 2, flowerY + 2, 3, 3, flowerColor);
+    rc(flowerX, flowerY - 1, 3, 3, flowerColor);
+    rc(flowerX, flowerY + 5, 3, 2, flowerColor);
+    rc(flowerX, flowerY + 2, 3, 3, "#ffd166");
+  }
+};
+
+const drawPlatformGrassTufts = (sx, y, w, night) => {
+  const dark = blendColor("#328638", "#24483c", night);
+  const mid = blendColor("#4fae3a", "#315b43", night);
+  const light = blendColor("#8be05a", "#72996a", night);
+
+  const positions = [
+    sx + 7,
+    sx + w - 12
+  ];
+
+  positions.forEach((x, index) => {
+    if (index === 0) {
+      rc(x, y - 8, 2, 5, dark);
+      rc(x + 3, y - 11, 2, 8, mid);
+      rc(x + 6, y - 7, 2, 4, light);
+    } else {
+      rc(x, y - 7, 2, 4, light);
+      rc(x + 3, y - 12, 2, 9, mid);
+      rc(x + 6, y - 8, 2, 5, dark);
+    }
+  });
+};
+
+const drawPlatformDecorations = (night = 0) => {
+  PLATS.forEach((platform, index) => {
+    const sx = px(platform.x);
+
+    if (sx < -200 || sx > W) return;
+
+    const surfaceY = platform.y - 6;
+
+    drawPlatformGrassTufts(
+      sx,
+      surfaceY,
+      platform.w,
+      night
+    );
+
+    drawPlatformFlowers(
+      sx,
+      surfaceY,
+      platform.w,
+      index,
+      night
+    );
+  });
+};
+
 const drawPlatforms = () => {
   PLATS.forEach(platform => {
     const sx = px(platform.x);
@@ -531,10 +629,8 @@ const drawPlatforms = () => {
 
     rc(sx, platform.y, platform.w, 16, "#a2593c");
     rc(sx, platform.y + 8, platform.w, 5, "#8e4a30");
-
     rc(sx, platform.y - 6, platform.w, 8, "#69c441");
     rc(sx, platform.y - 6, platform.w, 3, "#8be05a");
-
     rc(sx, platform.y + 3, platform.w, 2, "#b96e4a");
   });
 };
@@ -609,16 +705,122 @@ const drawCoins = (coins, time) => {
   });
 };
 
+/* ---------- BOSS ARRIVAL ATMOSPHERE ---------- */
+
+const drawBossAtmosphere = (time, intensity = 0) => {
+  if (intensity <= 0) return;
+
+  const strength = Math.max(0, Math.min(1, intensity));
+  const bossX = px(BOSS.x);
+
+  ctx.save();
+
+  // Subtle purple darkness over the town
+  ctx.globalAlpha = strength * 0.16;
+  rc(0, 0, W, H, "#171124");
+
+  // Faint red glow around the boss's location
+  if (bossX > -220 && bossX < W + 220) {
+    const pulse = 0.75 + Math.sin(time * 2.2) * 0.15;
+
+    const glow = ctx.createRadialGradient(
+      bossX,
+      GY - 48,
+      8,
+      bossX,
+      GY - 48,
+      190
+    );
+
+    glow.addColorStop(
+      0,
+      `rgba(126, 35, 61, ${0.24 * strength * pulse})`
+    );
+
+    glow.addColorStop(
+      0.55,
+      `rgba(90, 29, 57, ${0.12 * strength})`
+    );
+
+    glow.addColorStop(1, "rgba(50, 20, 48, 0)");
+
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = glow;
+    ctx.fillRect(
+      bossX - 190,
+      GY - 220,
+      380,
+      220
+    );
+  }
+
+  // Low drifting fog
+  ctx.globalAlpha = strength * 0.09;
+
+  for (let i = 0; i < 6; i++) {
+    const width = 55 + (i % 3) * 35;
+
+    const x =
+      ((time * (9 + i * 2) + i * 137) %
+        (W + width)) - width;
+
+    const y = GY - 94 + i * 13;
+
+    rc(x, y, width, 3, "#ad7185");
+  }
+
+  // Occasional horizontal screen interference
+  const glitchWave = Math.sin(time * 4.8);
+
+  if (glitchWave > 0.82) {
+    ctx.globalAlpha = strength * 0.18;
+
+    const lineY = Math.floor(
+      (time * 113) % H
+    );
+
+    rc(0, lineY, W, 2, "#e65a73");
+  }
+
+  // Small, short-lived static pixels
+  ctx.globalAlpha = strength * 0.28;
+
+  for (let i = 0; i < 13; i++) {
+    const speed = 12 + (i % 4) * 9;
+
+    const x = (
+      i * 127 + Math.floor(time * speed)
+    ) % W;
+
+    const y = 35 + (i * 43) % 190;
+
+    if (i % 3 === 0) {
+      rc(x, y, 5, 2, "#e65a73");
+    } else {
+      rc(x, y, 2, 2, "#b9a3c9");
+    }
+  }
+
+  ctx.restore();
+};
+
 export const drawEnvironment = ({
   coins = [],
   time = 0,
-  night = 0
+  night = 0,
+  bossAwakening = 0
 } = {}) => {
   const cycle = getDayCycle(time);
 
   const currentNight = Math.max(
     night,
-    cycle.night
+    cycle.night,
+    bossAwakening * 0.78
+  );
+
+  const birdDarkness = Math.max(
+    currentNight,
+    bossAwakening
   );
 
   drawSky(
@@ -628,7 +830,8 @@ export const drawEnvironment = ({
     cycle.sunrise
   );
 
-  drawBirds(time, currentNight);
+  // Birds gradually disappear as the boss arrives
+  drawBirds(time, birdDarkness);
 
   drawBuildings(
     currentNight,
@@ -642,15 +845,22 @@ export const drawEnvironment = ({
   drawGround(currentNight);
   drawGrassDetails(currentNight);
 
+  // Streetlights begin flickering during the arrival
   drawStreetLights(
     currentNight,
     cycle.sunset,
-    cycle.sunrise
+    cycle.sunrise,
+    time,
+    bossAwakening
   );
 
   drawPlatforms();
+  drawPlatformDecorations(currentNight);
+
   drawTruck(currentNight);
   drawCoins(coins, time);
+
+  drawBossAtmosphere(time, bossAwakening);
 
   ctx.textAlign = "left";
 };

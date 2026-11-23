@@ -1,5 +1,3 @@
-// character rendering
-
 import { ctx, camera } from "./canvas.js";
 import { NPCS, BOSS } from "../data/npcs.js";
 import { GROUND_Y } from "../constants.js";
@@ -9,7 +7,24 @@ const rc = (x, y, w, h, c) => {
   ctx.fillRect(Math.round(x), Math.round(y), w, h);
 };
 
-export const px = (x) => Math.round(x - camera.x);
+export const px = x => Math.round(x - camera.x);
+
+const robotRevealTimes = new WeakMap();
+
+const getRobotProgress = (npc, now) => {
+  if (npc.state !== 2) {
+    robotRevealTimes.delete(npc);
+    return 1;
+  }
+
+  if (!robotRevealTimes.has(npc)) {
+    robotRevealTimes.set(npc, now);
+  }
+
+  const elapsed = now - robotRevealTimes.get(npc);
+
+  return Math.max(0, Math.min(1, elapsed / 950));
+};
 
 export function drawCharacter(
   x,
@@ -20,7 +35,8 @@ export function drawCharacter(
   scale = 3,
   moving = false,
   expression = "neutral",
-  talking = false
+  talking = false,
+  robotMode = false
 ) {
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
@@ -34,92 +50,125 @@ export function drawCharacter(
   const rightLift = step < 0 ? 0.35 : 0;
 
   const ink = "#16257a";
-  const h = palette.h;
+  const metalDark = "#30394d";
+  const metalMid = "#536078";
+  const metalLight = "#8493ad";
+  const metalHighlight = "#b8c4d6";
+  const robotRed = "#ff405d";
+
   const hasBeard = palette.a === "beard";
   const hasMoustache = palette.a === "stache";
 
-  u(-3 + step, -5 - leftLift, 3, 5, palette.p);
-  u(1 - step, -5 - rightLift, 3, 5, palette.p);
-  u(-3 + step, -1 - leftLift, 4, 1, ink);
-  u(1 - step, -1 - rightLift, 4, 1, ink);
+  const legColor = robotMode ? metalMid : palette.p;
+  const shirtColor = robotMode ? metalMid : palette.t;
+  const faceColor = robotMode ? metalLight : palette.s;
 
-  u(-4, -12, 8, 7, palette.t);
-  u(-6, -12, 2, 6, palette.t);
-  u(4, -12, 2, 6, palette.t);
+  u(-3 + step, -5 - leftLift, 3, 5, legColor);
+  u(1 - step, -5 - rightLift, 3, 5, legColor);
+
+  u(-3 + step, -1 - leftLift, 4, 1, robotMode ? metalDark : ink);
+  u(1 - step, -1 - rightLift, 4, 1, robotMode ? metalDark : ink);
+
+  if (robotMode) {
+    u(-2 + step, -4 - leftLift, 1, 3, metalLight);
+    u(2 - step, -4 - rightLift, 1, 3, metalLight);
+  }
+
+  u(-4, -12, 8, 7, shirtColor);
+  u(-6, -12, 2, 6, shirtColor);
+  u(4, -12, 2, 6, shirtColor);
   u(-6, -6, 2, 1, palette.s);
   u(4, -6, 2, 1, palette.s);
 
-  u(-4, -19, 8, 7, palette.s);
+  u(-4, -19, 8, 7, faceColor);
 
-  const eyeColor = h === "robot" ? "#5fe0b0" : ink;
   const blinkCycle = (time + Math.abs(x) * 0.013) % 4.5;
   const blinking = blinkCycle > 4.35;
 
-  if (blinking) {
-    u(0, -15, 1, 1, eyeColor);
-    u(2, -15, 1, 1, eyeColor);
+  if (robotMode) {
+    u(-5, -19, 1, 6, metalDark);
+    u(4, -19, 1, 6, metalDark);
+    u(-4, -19, 8, 1, metalHighlight);
+    u(-4, -13, 8, 1, metalDark);
+
+    u(0, -16, 1, 2, robotRed);
+    u(2, -16, 1, 2, robotRed);
+
+    u(-1, -17, 3, 1, "#ff8794");
+    u(1, -17, 3, 1, "#ff8794");
+
+    u(-5, -15, 1, 2, metalHighlight);
+    u(5, -15, 1, 2, metalHighlight);
+
+    u(-1, -12, 4, 1, metalDark);
+    u(0, -12, 2, 1, metalHighlight);
   } else {
-    u(0, -16, 1, 2, eyeColor);
-    u(2, -16, 1, 2, eyeColor);
-  }
+    if (blinking) {
+      u(0, -15, 1, 1, ink);
+      u(2, -15, 1, 1, ink);
+    } else {
+      u(0, -16, 1, 2, ink);
+      u(2, -16, 1, 2, ink);
+    }
 
-  if (expression === "worried") {
-    u(-1, -18, 2, 1, ink);
-    u(2, -18, 2, 1, ink);
-  }
+    if (expression === "worried") {
+      u(-1, -18, 2, 1, ink);
+      u(2, -18, 2, 1, ink);
+    }
 
-  if (expression === "focused") {
-    u(-1, -17, 2, 1, ink);
-    u(2, -17, 2, 1, ink);
-  }
+    if (expression === "focused") {
+      u(-1, -17, 2, 1, ink);
+      u(2, -17, 2, 1, ink);
+    }
 
-  if (!hasBeard) {
-    if (talking) {
-      const mouthOpen = Math.sin(time * 12) > 0;
+    if (!hasBeard) {
+      if (talking) {
+        const mouthOpen = Math.sin(time * 12) > 0;
 
-      if (mouthOpen) {
+        if (mouthOpen) {
+          u(0, -13, 2, 1, ink);
+        } else {
+          u(0, -13, 1, 1, ink);
+        }
+      } else if (expression === "happy" && !hasMoustache) {
+        u(0, -13, 3, 1, ink);
+      } else if (expression === "worried" && !hasMoustache) {
         u(0, -13, 2, 1, ink);
-      } else {
-        u(0, -13, 1, 1, ink);
       }
-    } else if (expression === "happy" && !hasMoustache) {
-      u(0, -13, 3, 1, ink);
-    } else if (expression === "worried" && !hasMoustache) {
-      u(0, -13, 2, 1, ink);
     }
   }
 
-  if (h === "cap") {
+  if (palette.h === "cap") {
     u(-4, -21, 8, 3, palette.c);
     u(2, -19, 5, 1, palette.c);
   }
 
-  if (h === "spiky") {
+  if (palette.h === "spiky") {
     u(-4, -20, 8, 2, palette.c);
     u(-3, -22, 2, 2, palette.c);
     u(0, -23, 2, 3, palette.c);
     u(3, -22, 2, 2, palette.c);
   }
 
-  if (h === "bun") {
+  if (palette.h === "bun") {
     u(-4, -20, 8, 2, palette.c);
     u(-4, -18, 2, 5, palette.c);
     u(-2, -23, 4, 3, palette.c);
   }
 
-  if (h === "ears") {
+  if (palette.h === "ears") {
     u(-4, -20, 8, 1, palette.c);
     u(-5, -22, 3, 3, palette.c);
     u(2, -22, 3, 3, palette.c);
   }
 
-  if (h === "fisher") {
+  if (palette.h === "fisher") {
     u(-5, -21, 10, 3, palette.c);
     u(-4, -24, 8, 3, palette.c);
     u(-5, -19, 11, 1, "#d9a21c");
   }
 
-  if (h === "wizard") {
+  if (palette.h === "wizard") {
     u(-6, -21, 12, 2, palette.c);
     u(-4, -25, 8, 4, palette.c);
     u(-2, -29, 5, 4, palette.c);
@@ -128,31 +177,59 @@ export function drawCharacter(
     u(2, -27, 1, 1, "#fff");
   }
 
-  if (h === "straw") {
+  if (palette.h === "straw") {
     u(-7, -21, 14, 2, palette.c);
     u(-4, -24, 8, 3, palette.c);
     u(-4, -22, 8, 1, "#c9394a");
   }
 
-  if (h === "robot") {
+  if (palette.h === "robot") {
     u(-4, -20, 8, 1, "#8493ad");
     u(0, -25, 1, 5, "#8493ad");
     u(-1, -27, 3, 2, palette.c);
     u(-1, -12, 3, 2, palette.c);
   }
 
-  if (palette.a === "glasses") {
+  if (palette.a === "glasses" && !robotMode) {
     u(-1, -17, 3, 3, "rgba(255,255,255,.75)");
     u(2, -17, 3, 3, "rgba(255,255,255,.75)");
   }
 
-  if (hasBeard) {
+  if (hasBeard && !robotMode) {
     u(-3, -14, 6, 4, "#e8e8ee");
     u(-1, -10, 2, 2, "#e8e8ee");
   }
 
-  if (hasMoustache) {
+  if (hasMoustache && !robotMode) {
     u(0, -14, 5, 1, "#5a3418");
+  }
+
+  if (robotMode) {
+    u(-5, -11, 2, 3, metalDark);
+    u(4, -11, 2, 3, metalDark);
+
+    u(-3, -11, 6, 6, metalDark);
+    u(-2, -10, 4, 4, metalLight);
+    u(-1, -9, 2, 2, metalDark);
+
+    u(-5, -8, 2, 2, metalHighlight);
+    u(4, -8, 2, 2, metalHighlight);
+
+    u(-3, -6, 6, 1, metalHighlight);
+
+    u(-2, -3, 2, 2, metalLight);
+    u(2, -3, 2, 2, metalLight);
+
+    u(-1, -7, 3, 2, palette.c || robotRed);
+    u(0, -7, 1, 2, "#ff405d");
+
+    u(-2, -22, 4, 1, metalDark);
+    u(-1, -23, 2, 2, metalLight);
+    u(0, -25, 1, 3, metalDark);
+    u(-1, -26, 3, 2, robotRed);
+
+    u(-4, -15, 1, 1, metalHighlight);
+    u(4, -15, 1, 1, metalHighlight);
   }
 
   ctx.restore();
@@ -165,7 +242,8 @@ export const PLAYER = {
   h: "cap",
   c: "#ff6f7d"
 };
-export const drawPlayer = (player) => {
+
+export const drawPlayer = player => {
   if (!player) {
     drawPlayer.lastX = null;
     drawPlayer.lastMoveAt = 0;
@@ -197,6 +275,7 @@ export const drawPlayer = (player) => {
     moving
   );
 };
+
 const drawNPCIdleAction = (npc, x, y, time, facing) => {
   if (npc.state === 2) return;
 
@@ -272,7 +351,6 @@ const drawNPCIdleAction = (npc, x, y, time, facing) => {
       p(2, -12, 3, 2, sleeve);
       p(4, -15 - reach, 2, 5, sleeve);
       p(4, -19 - reach, 3, 2, skin);
-
       break;
     }
 
@@ -290,7 +368,6 @@ const drawNPCIdleAction = (npc, x, y, time, facing) => {
       p(3, -8, 3, 1, "#b8c4d6");
       p(5, -9, 1, 3, "#8493ad");
       p(6, -7, 2, 1, "#ffd166");
-
       break;
     }
 
@@ -307,7 +384,6 @@ const drawNPCIdleAction = (npc, x, y, time, facing) => {
       p(7, -15 + reel, 1, 8, "#8a5938");
       p(7, -17 + reel, 1, 3, "#8a5938");
       p(8, -17 + reel, 1, 1, "#8a5938");
-
       break;
     }
 
@@ -323,7 +399,6 @@ const drawNPCIdleAction = (npc, x, y, time, facing) => {
 
       p(8, -13 + scrape, 1, 5, "#a8a8b4");
       p(7, -14 + scrape, 3, 1, "#d9d9df");
-
       break;
     }
 
@@ -340,13 +415,43 @@ const drawNPCIdleAction = (npc, x, y, time, facing) => {
 
       p(7, -9 + strain, 4, 1, "#4fae3a");
       p(9, -11 + strain, 2, 2, "#3f9f3a");
-
       break;
     }
   }
 
   ctx.restore();
 };
+
+const drawRobotGlitch = (sx, y, time, progress) => {
+  if (progress >= 1) return;
+
+  const strength = 1 - progress;
+  const flicker = Math.sin(time * 75 + sx * 0.12);
+
+  ctx.save();
+
+  if (flicker > -0.2) {
+    ctx.globalAlpha = strength * 0.8;
+
+    const offset = Math.round(Math.sin(time * 91 + sx) * 8);
+
+    rc(sx - 17 + offset, y - 72, 37, 3, "#ff405d");
+    rc(sx - 13 - offset, y - 49, 31, 2, "#55efff");
+    rc(sx - 20 + offset, y - 29, 42, 3, "#ff405d");
+  }
+
+  if (flicker < 0.1) {
+    ctx.globalAlpha = strength * 0.55;
+
+    const offset = Math.round(Math.cos(time * 83 + sx) * 6);
+
+    rc(sx - 10 + offset, y - 62, 26, 2, "#55efff");
+    rc(sx - 16 - offset, y - 19, 34, 2, "#ff405d");
+  }
+
+  ctx.restore();
+};
+
 export const drawNPC = (
   npc,
   playerX,
@@ -355,32 +460,76 @@ export const drawNPC = (
 ) => {
   const y = npc.fy ?? GROUND_Y;
   const sx = px(npc.x);
-  const time = performance.now() / 1000;
+  const now = performance.now();
+  const time = now / 1000;
 
   const distance = Math.abs(npc.x - (playerX + 12));
   const isTalking = mode === "play" && dialogueOpen && distance < 80;
 
   let expression = "neutral";
 
-  if (npc.state === 2) {
-    expression = "happy";
-  } else if (npc.failed) {
+  if (npc.state !== 2 && npc.failed) {
     expression = "worried";
-  } else if (npc.round) {
+  } else if (npc.state !== 2 && npc.round) {
     expression = "focused";
+  } else if (npc.state === 2) {
+    expression = "happy";
   }
 
-  drawCharacter(
-    sx,
-    y,
-    npc.pal,
-    playerX < npc.x ? -1 : 1,
-    time,
-    3,
-    false,
-    expression,
-    isTalking
-  );
+  const robotProgress = getRobotProgress(npc, now);
+
+  if (npc.state === 2 && robotProgress < 1) {
+    const elapsed = robotProgress * 950;
+    const flickerFrame = Math.floor(elapsed / 65);
+    const showRobot = flickerFrame % 4 < 2;
+
+    if (showRobot) {
+      const offset = Math.round(
+        Math.sin(time * 85 + npc.x) * 5
+      );
+
+      drawCharacter(
+        sx + offset,
+        y,
+        npc.pal,
+        playerX < npc.x ? -1 : 1,
+        time,
+        3,
+        false,
+        "neutral",
+        false,
+        true
+      );
+    } else {
+      drawCharacter(
+        sx,
+        y,
+        npc.pal,
+        playerX < npc.x ? -1 : 1,
+        time,
+        3,
+        false,
+        "happy",
+        false,
+        false
+      );
+    }
+
+    drawRobotGlitch(sx, y, time, robotProgress);
+  } else {
+    drawCharacter(
+      sx,
+      y,
+      npc.pal,
+      playerX < npc.x ? -1 : 1,
+      time,
+      3,
+      false,
+      expression,
+      isTalking,
+      false
+    );
+  }
 
   const bob = Math.sin(time * 5 + npc.x) * 3;
 
@@ -442,6 +591,7 @@ export const drawNPCs = (
     );
   }
 };
+
 export const drawBoss = (
   playerX,
   mode = "play",
@@ -449,7 +599,6 @@ export const drawBoss = (
   time = 0,
   entryProgress = 1
 ) => {
-  
   const sx = px(BOSS.x);
   const y = GROUND_Y;
 
@@ -462,7 +611,6 @@ export const drawBoss = (
   const bob = progress >= 1 ? Math.sin(time * 2) * 2 : 0;
   const bossY = y + bob - drop;
 
-  // Ground shadow
   if (progress > 0.75) {
     const shadowScale = (progress - 0.75) / 0.25;
 
@@ -477,7 +625,6 @@ export const drawBoss = (
 
   drawBossPixelArt(sx, bossY, 1.5, time);
 
-  // Crown marker and name appear after the landing
   if (progress >= 0.9) {
     rc(sx - 11, bossY - 248, 22, 4, "#ffd166");
     rc(sx - 9, bossY - 256, 5, 9, "#ffd166");
@@ -524,6 +671,7 @@ export const drawBoss = (
 
   ctx.textAlign = "left";
 };
+
 export const bossSVG = () => `
 <svg class="boss-sprite coder-king"
      viewBox="0 0 100 130"
@@ -608,7 +756,6 @@ export const bossSVG = () => `
   </g>
 </svg>
 `;
-
 
 const R = (x, y, w, h, c = "g") =>
   `<rect class="${c}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
@@ -725,7 +872,7 @@ export const hankSVG = () => {
 };
 
 export const poseHank = (box, parts, mood, state = "") => {
-const svg = box.querySelector(".gallows");
+  const svg = box.querySelector(".gallows");
   if (!svg) return;
 
   svg.querySelectorAll(".part").forEach(part => {
@@ -742,21 +889,20 @@ const svg = box.querySelector(".gallows");
   }
 
   const currentState = [
-  "dead",
-  "free",
-  "attack",
-  "hurt"
-].find(state => svg.classList.contains(state)) || "";
+    "dead",
+    "free",
+    "attack",
+    "hurt"
+  ].find(state => svg.classList.contains(state)) || "";
 
-if (currentState !== state) {
-  svg.classList.remove("free", "dead", "attack", "hurt");
+  if (currentState !== state) {
+    svg.classList.remove("free", "dead", "attack", "hurt");
 
-  if (state) {
-    svg.classList.add(state);
+    if (state) {
+      svg.classList.add(state);
+    }
   }
-}
 };
-
 
 export const say = (element, text) => {
   clearInterval(element._t);
@@ -775,6 +921,7 @@ export const say = (element, text) => {
     }
   }, 22);
 };
+
 const drawBossPixelArt = (x, baseline, scale = 1.5, time = 0) => {
   ctx.save();
 

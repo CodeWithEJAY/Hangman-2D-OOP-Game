@@ -1,5 +1,4 @@
 // handles the characters that will be "saved"
-
 import { ctx, camera } from "./canvas.js";
 import { NPCS } from "../data/npcs.js";
 import { GROUND_Y, CANVAS_WIDTH as W } from "../constants.js";

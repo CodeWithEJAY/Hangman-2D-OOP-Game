@@ -14,7 +14,17 @@ const NPC_ROUND_REQUIREMENTS = {
 };
 
 export const getRequiredRounds = npc => {
-  return NPC_ROUND_REQUIREMENTS[npc.name] || 1;
+  const required = NPC_ROUND_REQUIREMENTS[npc.name];
+
+  if (required === undefined) {
+    console.error(
+      `[QUEST PROGRESSION] No round requirement found for "${npc.name}". Using 5 rounds.`
+    );
+
+    return 5;
+  }
+
+  return required;
 };
 
 export const advanceNPCChallenge = npc => {

@@ -1,5 +1,4 @@
 //pretty obvious mechanic when it multiplies score on tries left for best score mechanics
-
 export const calculateQuestScore = (triesLeft) => {
   return 100 + 25 * triesLeft;
 };

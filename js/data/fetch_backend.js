@@ -1,4 +1,4 @@
-// this is only a placeholder endpoints
+// this is only a placeholder endpoints, this file not use ok?
 export const data = async function fetch_backend(backend_api){
     try {
     const response = await fetch(backend_api);
