@@ -8,9 +8,7 @@
   goal,free,fail, intro, done - quest dialogue and description, just the string for commnucation depending on situation
   bx and by - captive position offset
  */
-
 import { GROUND_Y } from "../constants.js";
-
 
 export const NPCS = [
   {
@@ -23,7 +21,7 @@ export const NPCS = [
     hi: 6,
     pal: {
       s: "#f1c08a",
-      t: "#5fe0b0",
+      t: "#5fe0b0",     
       p: "#7a5230",
       h: "spiky",
       c: "#5a3418"
@@ -242,19 +240,19 @@ export const BOSS = {
   },
   hp: 10,
   maxHP: 10,
-  timeLimit: 50,
+  timeLimit: 20,
 introLines: [
-  "Wait... You're not one of them, are you?",
-  "An outsider... Finally, someone new.",
-  "This town wasn't always like this. Its people were once real, but now they're merely recreations trapped in an endless time loop.",
-  "I've spent years protecting them while searching for the one responsible.",
-  "I've tried to keep their lives as normal as possible, but I can't protect them forever.",
-  "And then you arrived. Perhaps you're the one I've been waiting for.",
-  "But I can't entrust their lives to just anyone.",
-  "I need you to prove yourself. Face me in battle and show me you're worthy of my trust.",
-  "If you succeed, I'll leave this town in your care while I hunt down the one behind all this.",
-  "I need to know they'll be safe in your hands.",
-  "Now then, little hero... show me what you've got."
+  "Wait... You're not one of my creations, are you?",
+  "An outsider... I never thought someone would find this place.",
+  "Years ago, a terrible storm swept through this land, taking everything and everyone I held dear.",
+  "Unable to accept their loss, I recreated them as machines, preserving their memories within this simulated world.",
+  "This village is all I have left of them. I've spent years making sure they never have to suffer again.",
+  "But beyond these walls lies a world just as cruel as the one that took them from me.",
+  "I won't watch another life disappear. Not again.",
+  "If you intend to leave, you'll have to prove you're strong enough to survive.",
+  "Face me in battle. Show me you can withstand what's waiting beyond this village.",
+  "I refuse to let you walk into danger unprepared.",
+  "Now then, little hero... show me what you're made of."
 ],
   clue: "The final word",
   free: "The Hangman King has fallen!",

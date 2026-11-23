@@ -1,4 +1,3 @@
-
 export const QUEST_ITEMS = {
   "pocket-knife": {
     name: "Pocket Knife",

@@ -1,4 +1,3 @@
-
 import { ctx, camera } from "./canvas.js";
 
 export const FX = [];

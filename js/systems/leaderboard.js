@@ -1,4 +1,3 @@
-
 const STORAGE_KEY = "hangmanLeaderboard";
 
 export const submitLeaderboardScore = async (name, score) => {

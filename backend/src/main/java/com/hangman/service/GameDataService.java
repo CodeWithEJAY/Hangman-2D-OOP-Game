@@ -65,7 +65,7 @@ private void validateCharacterIntroductions() {
             "bait-recipe",
             "Place",
             6,
-            9,
+            10,
             new NPCAppearance("#ffd3a1", "#d98ad1", "#6b4fa0", "bun", "#eeeeee", "glasses"),
             "Open Polly the parrot's cage",
             "Polly is flying free!",
@@ -159,7 +159,7 @@ private void validateCharacterIntroductions() {
             "Ahoy! A giant fish has taken my fishing line! I think it's the legendary Golden Fish, but I need a way to track and lure it!",
             "I'll need a Bait Recipe from Jasmine and an Old Compass from Zed to catch it. Could you collect both?",
             "You've got both! Excellent! Let's prepare the bait and track down that Golden Fish!",
-            "What a catch! I also found this Bee Smoker in the supply crate. Bruno could use it!"
+            "What a catch! I also found this Bee Smoker in the supply crate. Erickson could use it!"
         ),
 
         new NPC(
@@ -281,19 +281,20 @@ private void validateCharacterIntroductions() {
     ),
     10,
     10,
-    50,
-   List.of(
-    "Wait... You're not one of them, are you?",
-    "An outsider... Finally, someone new.",
-    "This town isn't what it seems. Its people are recreations, trapped in an endless time loop.",
-    "I've spent years protecting them while searching for the one responsible.",
-    "But I can't do both forever. I need someone to take my place.",
-    "Perhaps that someone is you.",
-    "But I won't entrust their lives to just anyone.",
-    "Prove yourself. Face me in battle and show me you're worthy of my trust.",
-    "If you succeed, I'll leave the town in your care while I hunt down the one behind all this.",
-    "I need to know they'll be safe in your hands.",
-    "Now then, little hero... show me what you've got."
+    20,
+ List.of(
+    "Wait... You're not one of my creations, are you?",
+    "An outsider... How did you even get here?",
+    "Years ago, a terrible storm swallowed this place. Everything I knew... everyone I loved... gone.",
+    "I couldn't accept losing them. So I rebuilt them, piece by piece, inside this world.",
+    "Every villager you see is a machine, brought to life by the memories I held onto.",
+    "This village is all that's left of them. I refuse to lose it again.",
+    "But beyond these walls, the world is unforgiving. The storm may be gone, but its dangers remain.",
+    "I won't let you walk out there only to become another memory.",
+    "If you wish to leave, then prove you can survive what lies beyond.",
+    "Fight me. Show me that you have the strength to face the unknown.",
+    "I won't hold back. I cannot afford to lose another soul.",
+    "Now then... show me you're ready, little hero."
 ),
     "The final word",
     "The Hangman King has fallen!",

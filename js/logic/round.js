@@ -1,8 +1,22 @@
-
 import { WORDS } from "../data/words.js";
 import { pick } from "../data/dialogue.js";
 import { MAX_MISSES } from "../constants.js";
-import { startQuestMusic } from "../systems/audio.js";
+
+const validWords = Array.isArray(WORDS)
+  ? WORDS.filter(
+      word =>
+        Array.isArray(word) &&
+        typeof word[0] === "string" &&
+        typeof word[1] === "string" &&
+        word[1].trim().length > 0
+    )
+  : [];
+
+if (validWords.length !== WORDS.length) {
+  console.warn(
+    `Invalid word entries detected: ${WORDS.length - validWords.length} entries were ignored. Check data/words.js.`
+  );
+}
 
 export const Run = {
   level: 1,
@@ -20,7 +34,7 @@ export const Round = {
       word[0] === n.cat &&
       !Run.used.includes(word[1]);
 
-    let pool = WORDS.filter(
+    let pool = validWords.filter(
       word =>
         fits(word) &&
         word[1].length >= n.lo + bonus &&
@@ -28,27 +42,31 @@ export const Round = {
     );
 
     if (!pool.length) {
-      pool = WORDS.filter(fits);
+      pool = validWords.filter(fits);
     }
 
     if (!pool.length) {
       Run.used = [];
-      pool = WORDS.filter(word => word[0] === n.cat);
+      pool = validWords.filter(
+        word => word[0] === n.cat
+      );
     }
 
     if (!pool.length) {
       throw new Error(
-        `No words available for category: ${n.cat}`
+        `No valid words available for category: ${n.cat}. Check data/words.js.`
       );
     }
 
     const selected = pick(pool);
 
-    Run.used.push(selected[1]);
-
-    if (n.cat !== "Boss") {
-      startQuestMusic();
+    if (!selected) {
+      throw new Error(
+        `Could not select a word for category: ${n.cat}.`
+      );
     }
+
+    Run.used.push(selected[1]);
 
     this.s = {
       category: selected[0],

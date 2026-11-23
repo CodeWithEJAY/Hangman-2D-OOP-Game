@@ -10,6 +10,8 @@ const MENU_BGM_URL = new URL("../../assets/audio/load.mp3", import.meta.url).hre
 const GAME_BGM_URL = new URL("../../assets/audio/stardew.mp3", import.meta.url).href;
 const QUEST_BGM_URL = new URL("../../assets/audio/boss.mp3", import.meta.url).href;
 const BOSS_BGM_URL = new URL("../../assets/audio/boss2.mp3", import.meta.url).href;
+const QUEST_COMPLETE_SFX_URL = new URL("../../assets/audio/complete.mp3", import.meta.url).href;
+
 
 let menuMusicAudio = null;
 let menuMusicRequested = false;
@@ -124,24 +126,38 @@ const createMusicTrack = (url, gainNode) => {
   if (!audio || !gainNode) return null;
 
   const element = new Audio(url);
+
   element.loop = true;
   element.preload = "auto";
 
-  element.addEventListener("error", () => {
-    console.error("Could not load music:", url, element.error);
-  });
-
-  const source = audio.createMediaElementSource(element);
-  source.connect(gainNode);
-
-  return {
+  const track = {
     audio: element,
-    source,
+    source: null,
     gain: gainNode,
     stopTimer: null,
     starting: false,
     requested: false
   };
+
+  element.addEventListener("ended", () => {
+    console.error("[MUSIC] TRACK ENDED", {
+      url,
+      loop: element.loop,
+      currentTime: element.currentTime,
+      duration: element.duration
+    });
+  });
+
+  element.addEventListener("error", () => {
+    console.error("[MUSIC] TRACK ERROR", url, element.error);
+  });
+
+  const source = audio.createMediaElementSource(element);
+  source.connect(gainNode);
+
+  track.source = source;
+
+  return track;
 };
 
 const startTrack = (
@@ -224,6 +240,24 @@ const stopTrack = track => {
   }, 650);
 };
 
+
+// this for complete quest sfx
+let questCompleteSfx;
+
+export const playQuestComplete = () => {
+  if (!questCompleteSfx) {
+    questCompleteSfx = new Audio(QUEST_COMPLETE_SFX_URL);
+    questCompleteSfx.preload = "auto";
+  }
+
+  questCompleteSfx.pause();
+  questCompleteSfx.currentTime = 0;
+  questCompleteSfx.volume = 0.8;
+
+  questCompleteSfx.play().catch(error => {
+    console.warn("Quest completion sound could not play:", error);
+  });
+};
 // MENU MUSIC
 
 const fadeMenuMusic = (
@@ -361,6 +395,7 @@ export const isSoundEnabled = () => true;
 // EXPLORATION MUSIC
 
 export const startGameMusic = () => {
+    console.trace("[MUSIC] START EXPLORATION");
   stopMenuMusic();
   stopQuestMusic();
   stopBossMusic();
@@ -393,6 +428,8 @@ export const pauseGameMusic = () => {
 };
 
 export const resumeGameMusic = () => {
+    console.trace("[MUSIC] RESUME EXPLORATION");
+
   stopMenuMusic();
   stopQuestMusic();
   stopBossMusic();
@@ -406,12 +443,14 @@ export const resumeGameMusic = () => {
 };
 
 export const stopGameMusic = () => {
+    console.trace("[MUSIC] STOP EXPLORATION");
   stopTrack(gameTrack);
 };
 
-// REGULAR NPC QUEST MUSIC
 
 export const startQuestMusic = () => {
+  console.trace("[MUSIC] START QUEST");
+
   stopMenuMusic();
   stopGameMusic();
   stopBossMusic();
@@ -426,9 +465,10 @@ export const startQuestMusic = () => {
 
 export const stopQuestMusic = () => {
   stopTrack(questTrack);
+    console.trace("[MUSIC] STOP QUEST");
+
 };
 
-// BOSS FIGHT MUSIC
 
 export const startBossMusic = () => {
   stopMenuMusic();
@@ -444,10 +484,10 @@ export const startBossMusic = () => {
 };
 
 export const stopBossMusic = () => {
+    console.trace("[MUSIC] STOP BOSS");
   stopTrack(bossTrack);
 };
 
-// SOUND EFFECTS
 
 const playTone = (
   frequency,

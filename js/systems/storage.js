@@ -1,4 +1,3 @@
-
 const SETTINGS_KEY = "hank_settings";
 const BEST_SCORE_KEY = "hank_best";
 
