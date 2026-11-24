@@ -12,6 +12,7 @@ import { BOSS } from "../data/npcs.js";
 
 const W = CANVAS_WIDTH;
 const H = CANVAS_HEIGHT;
+
 const GY = GROUND_Y;
 const TX = TRUCK_X;
 
@@ -340,12 +341,12 @@ const drawTrees = (night = 0) => {
 
     rc(sx - 4, GY - 92, 58, 34, leafDark);
     rc(sx - 4, GY - 92, 58, 31, leafMid);
-    rc(sx + 6, GY - 116, 38, 28, leafLight);
 
+    rc(sx + 6, GY - 116, 38, 28, leafLight);
     rc(sx + 10, GY - 110, 12, 6, leafHighlight);
     rc(sx + 30, GY - 105, 7, 4, leafHighlight);
-    rc(sx + 2, GY - 84, 7, 5, leafHighlight);
 
+    rc(sx + 2, GY - 84, 7, 5, leafHighlight);
     rc(sx + 25, GY - 94, 4, 3, leafDark);
     rc(sx + 42, GY - 88, 5, 3, leafDark);
     rc(sx + 17, GY - 79, 4, 3, leafDark);
@@ -459,6 +460,8 @@ const drawGrassDetails = (night = 0) => {
   }
 };
 
+/* ---------- STREET LIGHTS ---------- */
+
 const drawStreetLights = (
   night = 0,
   sunset = 0,
@@ -473,6 +476,7 @@ const drawStreetLights = (
   );
 
   const firstLamp = Math.floor((camera.x - 300) / 620);
+
   const pole = blendColor("#665b5a", "#39394e", night);
   const poleHighlight = blendColor("#a28a76", "#62546a", night);
   const frame = blendColor("#514b55", "#33334a", night);
@@ -501,8 +505,10 @@ const drawStreetLights = (
     if (lightLevel > 0.02) {
       ctx.save();
       ctx.globalAlpha = lightLevel * 0.10;
+
       rc(sx - 13, top - 11, 33, 30, "#ffd88a");
       rc(sx - 7, top - 17, 21, 43, "#ffd88a");
+
       ctx.restore();
     }
 
@@ -532,6 +538,324 @@ const drawStreetLights = (
       ctx.restore();
     }
   }
+};
+
+/* ---------- AMBIENT ENVIRONMENT EFFECTS ---------- */
+
+const drawBreezeGrass = (time, night = 0) => {
+  const dark = blendColor("#328638", "#24483c", night);
+  const mid = blendColor("#4fae3a", "#315b43", night);
+  const light = blendColor("#8be05a", "#72996a", night);
+
+  ctx.save();
+
+  for (let i = 0; i < 72; i++) {
+    const worldX = i * 37 + 17;
+    const sx = px(worldX);
+
+    if (sx < -15 || sx > W + 15) continue;
+
+    const sway = Math.sin(time * 1.4 + i * 0.85);
+    const secondSway = Math.sin(time * 1.1 + i * 1.3);
+
+    const lean = Math.round(sway * 3);
+    const baseY = GY;
+
+    rc(sx, baseY - 5, 2, 5, dark);
+    rc(sx + 3 + lean, baseY - 8 + Math.round(secondSway), 2, 8, mid);
+    rc(sx + 6 + lean, baseY - 4, 2, 4, light);
+
+    if (i % 3 === 0) {
+      rc(sx + 2 + lean, baseY - 10 + Math.round(secondSway), 2, 2, light);
+    }
+  }
+
+  ctx.restore();
+};
+
+const drawFloatingPollen = (
+  time,
+  night = 0,
+  twilight = 0
+) => {
+  const visibility =
+    (1 - night * 0.75) *
+    (0.22 + twilight * 0.48);
+
+  if (visibility <= 0.02) return;
+
+  ctx.save();
+
+  for (let i = 0; i < 20; i++) {
+    const span = W + 70;
+
+    const rawX =
+      i * 149 +
+      time * (4 + (i % 3) * 1.8) -
+      camera.x * 0.08;
+
+    const x = ((rawX % span) + span) % span - 35;
+
+    const y =
+      80 +
+      (i * 43) % Math.max(80, GY - 110) +
+      Math.sin(time * 0.8 + i * 2.1) * 12;
+
+    const alpha =
+      visibility *
+      (0.45 + (Math.sin(time * 1.3 + i) + 1) * 0.18);
+
+    ctx.globalAlpha = alpha;
+
+    const size = i % 4 === 0 ? 3 : 2;
+
+    rc(x, y, size, size, i % 3 === 0 ? "#fff2be" : "#f7edca");
+
+    if (i % 5 === 0) {
+      rc(x - 2, y + 1, 2, 1, "#fff8df");
+      rc(x + size, y + 1, 2, 1, "#fff8df");
+    }
+  }
+
+  ctx.restore();
+};
+
+const drawDriftingLeaves = (
+  time,
+  night = 0,
+  twilight = 0
+) => {
+  const leafColor = blendColor(
+    "#d69b55",
+    "#9b6b79",
+    night
+  );
+
+  const leafHighlight = blendColor(
+    "#f4c36e",
+    "#c18a8d",
+    night
+  );
+
+  const visibility =
+    (1 - night * 0.35) *
+    (0.32 + twilight * 0.25);
+
+  if (visibility <= 0.02) return;
+
+  ctx.save();
+  ctx.globalAlpha = visibility;
+
+  for (let i = 0; i < 8; i++) {
+    const span = W + 100;
+
+    const rawX =
+      i * 173 +
+      time * (11 + (i % 3) * 3) -
+      camera.x * 0.18;
+
+    const x = ((rawX % span) + span) % span - 50;
+
+    const y =
+      125 +
+      (i * 47) % Math.max(80, GY - 130) +
+      Math.sin(time * 1.3 + i * 2) * 17;
+
+    const rotation = Math.sin(time * 0.9 + i * 1.7) * 0.45;
+
+    ctx.save();
+    ctx.translate(Math.round(x), Math.round(y));
+    ctx.rotate(rotation);
+
+    rc(-4, -2, 8, 4, leafColor);
+    rc(-2, -4, 4, 2, leafHighlight);
+    rc(-1, -1, 4, 2, leafHighlight);
+    rc(-1, -1, 2, 5, leafColor);
+
+    ctx.restore();
+  }
+
+  ctx.restore();
+};
+
+const drawFireflies = (
+  time,
+  night = 0,
+  bossAwakening = 0
+) => {
+  if (night <= 0.02) return;
+
+  const atmosphere = Math.max(
+    0,
+    Math.min(1, night)
+  );
+
+  const calmFactor = 1 - bossAwakening * 0.9;
+
+  if (calmFactor <= 0.02) return;
+
+  ctx.save();
+
+  for (let i = 0; i < 54; i++) {
+    const worldX = 180 + i * 174 + (i * 47) % 53;
+    const screenBaseX = worldX - camera.x;
+
+    if (screenBaseX < -30 || screenBaseX > W + 30) {
+      continue;
+    }
+
+    const phase = i * 2.17;
+    const pulse = (Math.sin(time * 1.8 + phase) + 1) / 2;
+
+    const blink =
+      smoothStep(0.08, 0.38, pulse) *
+      (1 - smoothStep(0.82, 0.98, pulse));
+
+    const alpha =
+      atmosphere *
+      calmFactor *
+      (0.12 + blink * 0.7);
+
+    const driftX =
+      Math.sin(time * 0.55 + phase) * 10;
+
+    const driftY =
+      Math.sin(time * 1.25 + phase * 1.4) * 5;
+
+    const x = Math.round(screenBaseX + driftX);
+
+    const y = Math.round(
+      GY - 32 - ((i * 41) % 128) + driftY
+    );
+
+    ctx.save();
+
+    ctx.globalAlpha = alpha * 0.42;
+
+    const glow = ctx.createRadialGradient(
+      x + 1,
+      y + 1,
+      1,
+      x + 1,
+      y + 1,
+      12
+    );
+
+    glow.addColorStop(0, "rgba(255, 229, 132, 0.72)");
+    glow.addColorStop(0.35, "rgba(210, 218, 102, 0.25)");
+    glow.addColorStop(1, "rgba(210, 218, 102, 0)");
+
+    ctx.fillStyle = glow;
+    ctx.fillRect(x - 11, y - 11, 24, 24);
+
+    ctx.globalAlpha = alpha;
+
+    rc(x, y, 3, 3, "#f6ed9c");
+
+    if (blink > 0.65) {
+      rc(x - 2, y + 1, 2, 2, "#d7e99a");
+      rc(x + 3, y - 1, 2, 2, "#fff5c3");
+    }
+
+    ctx.restore();
+  }
+
+  ctx.restore();
+};
+
+const drawNightMoths = (
+  time,
+  night = 0
+) => {
+  if (night <= 0.25) return;
+
+  const firstLamp = Math.floor((camera.x - 300) / 620);
+
+  ctx.save();
+  ctx.globalAlpha = night * 0.48;
+
+  for (let i = firstLamp; i < firstLamp + 5; i++) {
+    const lampWorldX = i * 620 + 300;
+    const screenX = px(lampWorldX);
+
+    if (screenX < -70 || screenX > W + 70) continue;
+
+    const centerY = GY - 89;
+    const angle = time * 1.4 + i * 2.6;
+
+    const x = screenX + 22 + Math.cos(angle) * 15;
+    const y = centerY + Math.sin(angle * 1.3) * 12;
+
+    const wingsUp = Math.sin(time * 11 + i) > 0;
+
+    if (wingsUp) {
+      rc(x - 4, y - 2, 4, 3, "#e8d9b2");
+      rc(x + 2, y - 2, 4, 3, "#e8d9b2");
+    } else {
+      rc(x - 3, y - 3, 3, 5, "#e8d9b2");
+      rc(x + 2, y - 3, 3, 5, "#e8d9b2");
+    }
+
+    rc(x, y - 1, 3, 4, "#b9a58a");
+  }
+
+  ctx.restore();
+};
+
+const drawNightBats = (
+  time,
+  night = 0,
+  bossAwakening = 0
+) => {
+  if (night <= 0.32) return;
+
+  const visibility = night * (1 - bossAwakening * 0.8);
+
+  if (visibility <= 0.02) return;
+
+  const batColor = blendColor(
+    "#344057",
+    "#191c32",
+    night
+  );
+
+  ctx.save();
+  ctx.globalAlpha = visibility * 0.68;
+
+  for (let i = 0; i < 3; i++) {
+    const span = W + 100;
+
+    const rawX =
+      i * 230 +
+      time * (17 + i * 4) -
+      camera.x * 0.12;
+
+    const x = ((rawX % span) + span) % span - 50;
+
+    const y =
+      66 +
+      i * 37 +
+      Math.sin(time * 1.7 + i * 2) * 8;
+
+    const wingsUp = Math.sin(time * 9 + i * 2.5) > 0;
+
+    if (wingsUp) {
+      rc(x - 9, y - 5, 4, 5, batColor);
+      rc(x - 5, y - 2, 4, 3, batColor);
+      rc(x + 1, y - 2, 4, 3, batColor);
+      rc(x + 5, y - 5, 4, 5, batColor);
+    } else {
+      rc(x - 9, y - 1, 4, 3, batColor);
+      rc(x - 5, y - 3, 4, 3, batColor);
+      rc(x + 1, y - 3, 4, 3, batColor);
+      rc(x + 5, y - 1, 4, 3, batColor);
+    }
+
+    rc(x - 2, y - 1, 6, 4, batColor);
+    rc(x, y - 3, 2, 2, batColor);
+  }
+
+  ctx.restore();
 };
 
 /* ---------- PLATFORM DECORATIONS ---------- */
@@ -572,7 +896,6 @@ const drawPlatformFlowers = (sx, y, w, index, night) => {
     rc(flowerX, flowerY + 2, 3, 3, "#ffd166");
   }
 };
-
 const drawPlatformGrassTufts = (sx, y, w, night) => {
   const dark = blendColor("#328638", "#24483c", night);
   const mid = blendColor("#4fae3a", "#315b43", night);
@@ -585,16 +908,17 @@ const drawPlatformGrassTufts = (sx, y, w, night) => {
 
   positions.forEach((x, index) => {
     if (index === 0) {
-      rc(x, y - 8, 2, 5, dark);
-      rc(x + 3, y - 11, 2, 8, mid);
-      rc(x + 6, y - 7, 2, 4, light);
+      rc(x, y - 5, 2, 5, dark);
+      rc(x + 3, y - 8, 2, 8, mid);
+      rc(x + 6, y - 4, 2, 4, light);
     } else {
-      rc(x, y - 7, 2, 4, light);
-      rc(x + 3, y - 12, 2, 9, mid);
-      rc(x + 6, y - 8, 2, 5, dark);
+      rc(x, y - 4, 2, 4, light);
+      rc(x + 3, y - 9, 2, 9, mid);
+      rc(x + 6, y - 5, 2, 5, dark);
     }
   });
 };
+
 
 const drawPlatformDecorations = (night = 0) => {
   PLATS.forEach((platform, index) => {
@@ -715,11 +1039,9 @@ const drawBossAtmosphere = (time, intensity = 0) => {
 
   ctx.save();
 
-  // Subtle purple darkness over the town
   ctx.globalAlpha = strength * 0.16;
   rc(0, 0, W, H, "#171124");
 
-  // Faint red glow around the boss's location
   if (bossX > -220 && bossX < W + 220) {
     const pulse = 0.75 + Math.sin(time * 2.2) * 0.15;
 
@@ -746,6 +1068,7 @@ const drawBossAtmosphere = (time, intensity = 0) => {
 
     ctx.globalAlpha = 1;
     ctx.fillStyle = glow;
+
     ctx.fillRect(
       bossX - 190,
       GY - 220,
@@ -754,7 +1077,6 @@ const drawBossAtmosphere = (time, intensity = 0) => {
     );
   }
 
-  // Low drifting fog
   ctx.globalAlpha = strength * 0.09;
 
   for (let i = 0; i < 6; i++) {
@@ -769,20 +1091,16 @@ const drawBossAtmosphere = (time, intensity = 0) => {
     rc(x, y, width, 3, "#ad7185");
   }
 
-  // Occasional horizontal screen interference
   const glitchWave = Math.sin(time * 4.8);
 
   if (glitchWave > 0.82) {
     ctx.globalAlpha = strength * 0.18;
 
-    const lineY = Math.floor(
-      (time * 113) % H
-    );
+    const lineY = Math.floor((time * 113) % H);
 
     rc(0, lineY, W, 2, "#e65a73");
   }
 
-  // Small, short-lived static pixels
   ctx.globalAlpha = strength * 0.28;
 
   for (let i = 0; i < 13; i++) {
@@ -818,6 +1136,11 @@ export const drawEnvironment = ({
     bossAwakening * 0.78
   );
 
+  const twilight = Math.max(
+    cycle.sunset,
+    cycle.sunrise
+  );
+
   const birdDarkness = Math.max(
     currentNight,
     bossAwakening
@@ -830,7 +1153,6 @@ export const drawEnvironment = ({
     cycle.sunrise
   );
 
-  // Birds gradually disappear as the boss arrives
   drawBirds(time, birdDarkness);
 
   drawBuildings(
@@ -845,7 +1167,8 @@ export const drawEnvironment = ({
   drawGround(currentNight);
   drawGrassDetails(currentNight);
 
-  // Streetlights begin flickering during the arrival
+  drawBreezeGrass(time, currentNight);
+
   drawStreetLights(
     currentNight,
     cycle.sunset,
@@ -856,11 +1179,44 @@ export const drawEnvironment = ({
 
   drawPlatforms();
   drawPlatformDecorations(currentNight);
-
   drawTruck(currentNight);
   drawCoins(coins, time);
 
   drawBossAtmosphere(time, bossAwakening);
+
+  drawFloatingPollen(
+    time,
+    currentNight,
+    twilight
+  );
+
+  drawDriftingLeaves(
+    time,
+    currentNight,
+    twilight
+  );
+
+  drawNightBats(
+    time,
+    currentNight,
+    bossAwakening
+  );
+
+  drawNightMoths(
+    time,
+    currentNight * (1 - bossAwakening)
+  );
+
+  const fireflyLevel = Math.max(
+    currentNight,
+    twilight * 0.32
+  );
+
+  drawFireflies(
+    time,
+    fireflyLevel,
+    bossAwakening
+  );
 
   ctx.textAlign = "left";
 };

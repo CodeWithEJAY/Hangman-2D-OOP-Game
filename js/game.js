@@ -8,6 +8,7 @@ import {
 } from "./systems/leaderboard.js";
 
 
+
 import {
   GROUND_Y,
   INITIAL_HEARTS,
@@ -138,6 +139,8 @@ const npcIntroSeen = new Set();
 
 
 
+
+
 let inventoryExpanded = false;
 
 const hasQuestItem = npc => {
@@ -159,6 +162,9 @@ const grantQuestItem = itemId => {
 
   return item;
 };
+
+
+
 const getQuestDialogue = (npc, hasSeenIntro = false) => {
   if (npc.state === 2 || completedNPCNames.has(npc.name)) {
     return [npc.done || "Thank you for helping me!"];
@@ -2187,21 +2193,22 @@ case "leaderboardExport":
 /* ---------- UPDATE AND DRAW ---------- */
 
 const updateGame = deltaTime => {
-  if (game.mode !== "play" || !game.player) return;
-if (
-  game.boss.revealCutsceneActive ||
-  dialogue.bossIntroActive ||
-  (dialogue.npc && dialogue.typing)
-) {
-  updateFX(deltaTime);
-  return;
-}
-  if (dialogue.bossIntroActive) {
+  if (!game.player) return;
+
+  if (["play", "quest", "boss"].includes(game.mode)) {
+    game.elapsedTime += deltaTime / 1000;
+  }
+
+  if (game.mode !== "play") return;
+
+  if (
+    game.boss.revealCutsceneActive ||
+    dialogue.bossIntroActive ||
+    (dialogue.npc && dialogue.typing)
+  ) {
     updateFX(deltaTime);
     return;
   }
-
-  game.elapsedTime += deltaTime / 1000;
 
   updatePlayer(
     game.player,
