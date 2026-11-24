@@ -139,7 +139,85 @@ const npcIntroSeen = new Set();
 
 
 
+const FIXED_NPC_NAMES = new Set(["Zed", "Finn"]);
 
+let originalNPCPositions = null;
+
+const shuffleArray = array => {
+  const result = [...array];
+
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+
+  return result;
+};
+
+const createNonIdentityShuffle = entries => {
+  if (entries.length < 2) return [...entries];
+
+  let shuffled = shuffleArray(entries);
+  let attempts = 0;
+
+  while (
+    attempts < 100 &&
+    shuffled.some(
+      (entry, index) => entry.ownerName === entries[index].ownerName
+    )
+  ) {
+    shuffled = shuffleArray(entries);
+    attempts++;
+  }
+
+  if (
+    shuffled.some(
+      (entry, index) => entry.ownerName === entries[index].ownerName
+    )
+  ) {
+    shuffled = entries.slice(1).concat(entries[0]);
+  }
+
+  return shuffled;
+};
+
+const randomizeNPCPositions = () => {
+  if (!Array.isArray(NPCS) || NPCS.length < 2) return;
+
+  // Capture the original Java-loaded positions once.
+  if (!originalNPCPositions) {
+    originalNPCPositions = new Map(
+      NPCS.map(npc => [npc.name, npc.x])
+    );
+  }
+
+  const movableNPCs = NPCS.filter(
+    npc => !FIXED_NPC_NAMES.has(npc.name)
+  );
+
+  if (movableNPCs.length < 2) return;
+
+  const originalPositions = movableNPCs.map(npc => ({
+    ownerName: npc.name,
+    x: originalNPCPositions.get(npc.name)
+  }));
+
+  const shuffledPositions =
+    createNonIdentityShuffle(originalPositions);
+
+  movableNPCs.forEach((npc, index) => {
+    npc.x = shuffledPositions[index].x;
+  });
+
+  console.table(
+    NPCS.map(npc => ({
+      NPC: npc.name,
+      Position: npc.x,
+      Fixed: FIXED_NPC_NAMES.has(npc.name)
+    }))
+  );
+};
 
 let inventoryExpanded = false;
 
@@ -1824,6 +1902,9 @@ const startNewGame = () => {
 
   document.body.classList.remove("boss-fight-active");
 
+  // Randomize NPC positions before starting the new game.
+  randomizeNPCPositions();
+
   initializeProgression();
 
   game.player = createPlayer();
@@ -1860,9 +1941,6 @@ const startNewGame = () => {
   npcIntroSeen.clear();
   completedNPCNames.clear();
 
-
-  console.log("New quest order:", game.questOrder);
-
   game.mode = "play";
 
   renderInventoryHUD();
@@ -1879,6 +1957,8 @@ const startNewGame = () => {
 
   updateCamera(game.player);
   updateHUD();
+
+  console.log("New game started with randomized NPC positions.");
 };
 
 const pauseGame = () => {
@@ -2193,22 +2273,21 @@ case "leaderboardExport":
 /* ---------- UPDATE AND DRAW ---------- */
 
 const updateGame = deltaTime => {
-  if (!game.player) return;
-
-  if (["play", "quest", "boss"].includes(game.mode)) {
-    game.elapsedTime += deltaTime / 1000;
-  }
-
-  if (game.mode !== "play") return;
-
-  if (
-    game.boss.revealCutsceneActive ||
-    dialogue.bossIntroActive ||
-    (dialogue.npc && dialogue.typing)
-  ) {
+  if (game.mode !== "play" || !game.player) return;
+if (
+  game.boss.revealCutsceneActive ||
+  dialogue.bossIntroActive ||
+  (dialogue.npc && dialogue.typing)
+) {
+  updateFX(deltaTime);
+  return;
+}
+  if (dialogue.bossIntroActive) {
     updateFX(deltaTime);
     return;
   }
+
+  game.elapsedTime += deltaTime / 1000;
 
   updatePlayer(
     game.player,
