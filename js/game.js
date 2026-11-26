@@ -134,13 +134,31 @@ cameraPanFrom: null,
 cameraPanTarget: null
 }
 };
+
+
+const showMenu = () => {
+  closeDialogue(true);
+
+  game.mode = "menu";
+  game.activeNPC = null;
+
+  showScreen("menu");
+
+  setVisible("hud", false);
+  setVisible("hud2", false);
+  setVisible("pauseBtn", false);
+
+  const bestText = getElement("bestTxt");
+
+  if (bestText) {
+    bestText.textContent = pad(game.bestScore, 6);
+  }
+};
+
 const completedNPCNames = new Set();
 const npcIntroSeen = new Set();
 
-
-
 const FIXED_NPC_NAMES = new Set(["Zed", "Finn"]);
-
 let originalNPCPositions = null;
 
 const shuffleArray = array => {
@@ -220,6 +238,7 @@ const randomizeNPCPositions = () => {
 };
 
 let inventoryExpanded = false;
+let inventoryModalKeyHandler = null;
 
 const hasQuestItem = npc => {
   const requirements = npc.requiresItems || [];
@@ -388,6 +407,15 @@ const renderInventoryHUD = () => {
 
   if (!hud) return;
 
+  const gameScreen = hud.closest(".game-screen");
+
+  gameScreen?.querySelector(".bag-modal-overlay")?.remove();
+
+  if (inventoryModalKeyHandler) {
+    document.removeEventListener("keydown", inventoryModalKeyHandler, true);
+    inventoryModalKeyHandler = null;
+  }
+
   hud.replaceChildren();
 
   const inventory = game.inventory || [];
@@ -399,11 +427,19 @@ const renderInventoryHUD = () => {
     return;
   }
 
+  const items = inventory
+    .map(itemId => ({
+      id: itemId,
+      item: QUEST_ITEMS[itemId]
+    }))
+    .filter(entry => entry.item);
+
   const toggle = document.createElement("button");
   toggle.type = "button";
   toggle.className = "inventory-toggle";
   toggle.setAttribute("aria-expanded", String(inventoryExpanded));
-  toggle.title = "Show or hide collected items";
+  toggle.setAttribute("aria-haspopup", "dialog");
+  toggle.title = "Open item bag";
 
   const icon = document.createElement("span");
   icon.textContent = "🎒";
@@ -415,47 +451,145 @@ const renderInventoryHUD = () => {
   count.className = "inventory-count";
   count.textContent = inventory.length;
 
-  const arrow = document.createElement("span");
-  arrow.textContent = inventoryExpanded ? "−" : "+";
-
-  toggle.append(icon, label, count, arrow);
+  toggle.append(icon, label, count);
+  hud.appendChild(toggle);
 
   toggle.addEventListener("click", () => {
     inventoryExpanded = !inventoryExpanded;
     renderInventoryHUD();
   });
 
-  hud.appendChild(toggle);
-
   if (!inventoryExpanded) return;
 
-  const list = document.createElement("div");
-  list.className = "inventory-list";
+  const overlay = document.createElement("div");
+  overlay.className = "bag-modal-overlay";
 
-  inventory.forEach(itemId => {
-    const item = QUEST_ITEMS[itemId];
+  const modal = document.createElement("div");
+  modal.className = "bag-modal";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-labelledby", "bagModalTitle");
 
-    if (!item) return;
+  const header = document.createElement("div");
+  header.className = "bag-modal-header";
+
+  const heading = document.createElement("div");
+  heading.className = "bag-modal-heading";
+
+  const bagIcon = document.createElement("span");
+  bagIcon.className = "bag-modal-icon";
+  bagIcon.textContent = "🎒";
+
+  const titleGroup = document.createElement("div");
+
+  const title = document.createElement("h2");
+  title.id = "bagModalTitle";
+  title.textContent = "ITEM BAG";
+
+  const subtitle = document.createElement("span");
+  subtitle.textContent = "COLLECTED ITEMS";
+
+  titleGroup.append(title, subtitle);
+  heading.append(bagIcon, titleGroup);
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "bag-modal-close";
+  closeButton.textContent = "×";
+  closeButton.setAttribute("aria-label", "Close inventory");
+
+  header.append(heading, closeButton);
+
+  const divider = document.createElement("div");
+  divider.className = "bag-modal-divider";
+
+  const sectionLabel = document.createElement("div");
+  sectionLabel.className = "bag-modal-section-label";
+  sectionLabel.textContent = "KEY ITEMS";
+
+  const grid = document.createElement("div");
+  grid.className = "bag-modal-grid";
+
+  const slotCount = Math.max(12, Math.ceil(items.length / 4) * 4);
+
+  for (let i = 0; i < slotCount; i++) {
+    const entry = items[i];
 
     const slot = document.createElement("div");
-    slot.className = "inventory-item";
+    slot.className = `bag-modal-slot ${entry ? "is-filled" : "is-empty"}`;
 
-    const itemIcon = document.createElement("span");
-    itemIcon.className = "inventory-item-icon";
-    itemIcon.textContent = item.icon;
+    if (entry) {
+      const itemIcon = document.createElement("span");
+      itemIcon.className = "bag-modal-slot-icon";
+      itemIcon.textContent = entry.item.icon;
 
-    const name = document.createElement("span");
-    name.className = "inventory-item-name";
-    name.textContent = item.name;
+      const itemName = document.createElement("span");
+      itemName.className = "bag-modal-slot-name";
+      itemName.textContent = entry.item.name;
 
-    slot.append(itemIcon, name);
-    list.appendChild(slot);
+      slot.title = entry.item.name;
+      slot.append(itemIcon, itemName);
+    } else {
+      const emptyMark = document.createElement("span");
+      emptyMark.className = "bag-modal-empty-mark";
+      emptyMark.textContent = "·";
+
+      slot.appendChild(emptyMark);
+    }
+
+    grid.appendChild(slot);
+  }
+
+  const footer = document.createElement("div");
+  footer.className = "bag-modal-footer";
+
+  const itemCount = document.createElement("span");
+  itemCount.textContent = `${items.length} ITEMS COLLECTED`;
+
+  const closeHint = document.createElement("span");
+  closeHint.textContent = "ESC TO CLOSE";
+
+  footer.append(itemCount, closeHint);
+
+  modal.append(header, divider, sectionLabel, grid, footer);
+  overlay.appendChild(modal);
+
+  const closeBag = () => {
+    inventoryExpanded = false;
+
+    if (inventoryModalKeyHandler) {
+      document.removeEventListener("keydown", inventoryModalKeyHandler, true);
+      inventoryModalKeyHandler = null;
+    }
+
+    overlay.remove();
+
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.focus();
+  };
+
+  closeButton.addEventListener("click", closeBag);
+
+  overlay.addEventListener("click", event => {
+    if (event.target === overlay) {
+      closeBag();
+    }
   });
 
-  hud.appendChild(list);
+  inventoryModalKeyHandler = event => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      closeBag();
+    }
+  };
+
+  document.addEventListener("keydown", inventoryModalKeyHandler, true);
+
+  (gameScreen || document.body).appendChild(overlay);
+
+  closeButton.focus();
 };
-
-
 
 
 const showLeaderboard = async () => {
@@ -1819,6 +1953,8 @@ const useHint = () => {
     failQuest();
   }
 };
+
+
 /* ---------- GAME FLOW ---------- */
 const showNameEntry = () => {
   closeDialogue(true);
@@ -1971,7 +2107,6 @@ const pauseGame = () => {
     showScreen(null);
   }
 };
-
 const endGame = victory => {
   if (game.mode === "end" || game.mode === "credits") return;
 
@@ -2092,51 +2227,33 @@ const endGame = victory => {
       </div>
 
       <div class="result-buttons">
-
         ${victory ? `
           <button
             class="result-button"
             type="button"
-            id="resultCredits"
+            id="resultContinue"
           >
-            VIEW CREDITS
+            CONTINUE →
           </button>
-        ` : ""}
-
-        <button
-          class="result-button"
-          type="button"
-          id="resultRetry"
-        >
-          PLAY AGAIN
-        </button>
-
-        <button
-          class="result-button"
-          type="button"
-          id="resultMenu"
-        >
-          MAIN MENU
-        </button>
-
+        ` : `
+          <button
+            class="result-button"
+            type="button"
+            id="resultRetry"
+          >
+            TRY AGAIN
+          </button>
+        `}
       </div>
 
     </div>
   `;
 
-  getElement("resultRetry").addEventListener("click", () => {
-    startNewGame();
-  });
-
-  getElement("resultMenu").addEventListener("click", () => {
-    game.mode = "menu";
-    game.activeNPC = null;
-    Round.s = null;
-
-    showMenu();
-  });
-
-  getElement("resultCredits")?.addEventListener("click", startCredits);
+  if (victory) {
+    getElement("resultContinue").addEventListener("click", startCredits);
+  } else {
+    getElement("resultRetry").addEventListener("click", startNewGame);
+  }
 
   showScreen("end");
 
@@ -2144,8 +2261,52 @@ const endGame = victory => {
   stopBossMusic();
 };
 
+
+const returnToCreditsMenu = () => {
+  if (game.mode !== "credits") return;
+
+  if (creditsWatchFrame !== null) {
+    cancelAnimationFrame(creditsWatchFrame);
+    creditsWatchFrame = null;
+  }
+
+  closeDialogue(true);
+
+  game.mode = "menu";
+  game.activeNPC = null;
+  Round.s = null;
+
+  showScreen("menu");
+
+  setVisible("hud", false);
+  setVisible("hud2", false);
+  setVisible("pauseBtn", false);
+
+  const bestText = getElement("bestTxt");
+
+  if (bestText) {
+    bestText.textContent = pad(game.bestScore, 6);
+  }
+};
+
+let creditsWatchFrame = null;
 const startCredits = () => {
   if (game.mode !== "end" || !game.boss.defeated) return;
+
+  const roll = getElement("creditsRoll");
+  const finale = getElement("creditsFinale");
+  const skipButton = getElement("creditsSkip");
+  const menuButton = getElement("creditsMenu");
+
+  if (!roll || !finale || !skipButton || !menuButton) {
+    console.error("Credits screen elements are missing.");
+    return;
+  }
+
+  if (creditsWatchFrame !== null) {
+    cancelAnimationFrame(creditsWatchFrame);
+    creditsWatchFrame = null;
+  }
 
   closeDialogue(true);
 
@@ -2158,36 +2319,60 @@ const startCredits = () => {
   setVisible("hud2", false);
   setVisible("pauseBtn", false);
 
-  const roll = getElement("creditsRoll");
-  const finale = getElement("creditsFinale");
-  const skipButton = getElement("creditsSkip");
-
-  if (!roll || !finale) return;
-
   showScreen("credits");
 
   roll.hidden = false;
   finale.hidden = true;
+  skipButton.hidden = false;
 
-  if (skipButton) {
-    skipButton.hidden = false;
-  }
+  skipButton.onclick = finishCredits;
 
-  roll.style.animation = "none";
-
-  void roll.offsetHeight;
+  menuButton.onclick = () => {
+    if (game.mode !== "credits") return;
+    showMenu();
+  };
 
   roll.onanimationend = event => {
-    if (event.animationName === "credits-scroll") {
+    if (
+      event.target === roll &&
+      event.animationName === "credits-scroll"
+    ) {
       finishCredits();
     }
   };
 
+  roll.style.animation = "none";
+  void roll.offsetHeight;
   roll.style.animation = "";
-};
 
+  const checkCreditsEnd = () => {
+    if (game.mode !== "credits" || roll.hidden) {
+      creditsWatchFrame = null;
+      return;
+    }
+
+    const lastSection = roll.querySelector(".credits-ending");
+
+    if (
+      lastSection &&
+      lastSection.getBoundingClientRect().bottom <= 0
+    ) {
+      finishCredits();
+      return;
+    }
+
+    creditsWatchFrame = requestAnimationFrame(checkCreditsEnd);
+  };
+
+  creditsWatchFrame = requestAnimationFrame(checkCreditsEnd);
+};
 const finishCredits = () => {
   if (game.mode !== "credits") return;
+
+  if (creditsWatchFrame !== null) {
+    cancelAnimationFrame(creditsWatchFrame);
+    creditsWatchFrame = null;
+  }
 
   const roll = getElement("creditsRoll");
   const finale = getElement("creditsFinale");
@@ -2206,28 +2391,20 @@ const finishCredits = () => {
     finale.hidden = false;
   }
 };
-
-const showMenu = () => {
-  closeDialogue(true);
-
-  game.mode = "menu";
-  game.activeNPC = null;
-
-  showScreen("menu");
-
-  setVisible("hud", false);
-  setVisible("hud2", false);
-  setVisible("pauseBtn", false);
-
-  const bestText = getElement("bestTxt");
-
-  if (bestText) {
-    bestText.textContent = pad(game.bestScore, 6);
-  }
-};
-
 /* ---------- ACTIONS ---------- */
 const handleAction = action => {
+  if (game.mode === "credits") {
+    if (action === "skipCredits") {
+      finishCredits();
+    }
+
+    if (action === "creditsMenu") {
+      returnToCreditsMenu();
+    }
+
+    return;
+  }
+
   if (
     action === "escape" &&
     (
@@ -2715,3 +2892,48 @@ export function testCompleteAllQuests() {
 }
 
 window.testCompleteAllQuests = testCompleteAllQuests;
+
+
+export function testVictoryEnding() {
+  clearInterval(game.boss.timer);
+  game.boss.timer = null;
+
+  clearTimeout(questFinishTimer);
+  clearQuestResult();
+  closeDialogue(true);
+
+  game.mode = "play";
+  game.activeNPC = null;
+  game.completed = NPCS.length;
+  game.hearts = 3;
+  game.candies = 35;
+  game.score = 2500;
+  game.elapsedTime = 125;
+
+  game.boss.unlocked = true;
+  game.boss.defeated = true;
+  game.boss.active = false;
+  game.boss.hp = 0;
+  game.boss.round = null;
+  game.boss.revealed = false;
+  game.boss.revealCutsceneActive = false;
+  game.boss.revealStartedAt = null;
+  game.boss.landingSoundPlayed = false;
+  game.boss.cameraPanFrom = null;
+  game.boss.cameraPanTarget = null;
+
+  Round.s = null;
+
+  setInputMode("world");
+
+  const previousName = game.playerName;
+  game.playerName = "VICTORY TEST";
+
+  endGame(true);
+
+  game.playerName = previousName;
+
+  console.log("Victory ending test started.");
+}
+
+window.testVictoryEnding = testVictoryEnding;
