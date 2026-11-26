@@ -1121,6 +1121,148 @@ const drawBossAtmosphere = (time, intensity = 0) => {
 
   ctx.restore();
 };
+const drawTownBanner = (night = 0) => {
+  const x = px(100);
+  const y = GY;
+
+  const wood = blendColor("#76503a", "#393348", night);
+  const woodLight = blendColor("#a87950", "#62516a", night);
+  const cloth = blendColor("#b98b9c", "#66536e", night);
+  const clothLight = blendColor("#d6a5ad", "#89708c", night);
+  const faded = blendColor("#806b77", "#51465f", night);
+  const textColor = blendColor("#65515c", "#c0a0ad", night);
+
+  rc(x + 3, y - 145, 7, 145, wood);
+  rc(x + 5, y - 143, 2, 140, woodLight);
+
+  rc(x + 153, y - 145, 7, 145, wood);
+  rc(x + 155, y - 143, 2, 140, woodLight);
+
+  rc(x - 1, y - 148, 15, 5, woodLight);
+  rc(x + 150, y - 148, 15, 5, woodLight);
+
+  rc(x + 8, y - 146, 147, 5, wood);
+  rc(x + 12, y - 145, 136, 2, woodLight);
+
+  rc(x + 12, y - 140, 136, 30, cloth);
+  rc(x + 12, y - 140, 136, 4, clothLight);
+  rc(x + 12, y - 136, 5, 21, faded);
+
+  rc(x + 20, y - 110, 18, 7, cloth);
+  rc(x + 38, y - 110, 12, 4, clothLight);
+  rc(x + 50, y - 110, 17, 7, cloth);
+  rc(x + 67, y - 110, 11, 4, faded);
+  rc(x + 78, y - 110, 20, 7, cloth);
+  rc(x + 98, y - 110, 13, 4, clothLight);
+  rc(x + 111, y - 110, 18, 7, cloth);
+  rc(x + 129, y - 110, 19, 4, faded);
+
+  rc(x + 18, y - 132, 5, 15, faded);
+  rc(x + 23, y - 132, 4, 5, clothLight);
+  rc(x + 35, y - 137, 3, 10, faded);
+
+  rc(x + 85, y - 140, 4, 12, faded);
+  rc(x + 89, y - 140, 3, 5, clothLight);
+
+  rc(x + 112, y - 137, 5, 18, faded);
+  rc(x + 117, y - 137, 3, 5, clothLight);
+
+  rc(x + 137, y - 140, 11, 4, cloth);
+  rc(x + 140, y - 136, 8, 10, faded);
+  rc(x + 143, y - 126, 5, 8, cloth);
+
+  rc(x + 45, y - 132, 3, 3, faded);
+  rc(x + 48, y - 129, 3, 3, faded);
+  rc(x + 51, y - 126, 3, 3, faded);
+
+  ctx.fillStyle = textColor;
+  ctx.font = 'bold 14px "Pixelify Sans", monospace';
+  ctx.textAlign = "center";
+  ctx.fillText("TOWN", x + 80, y - 119);
+
+  rc(x + 3, y - 42, 7, 4, woodLight);
+  rc(x + 153, y - 3, 13, 3, wood);
+  rc(x - 2, y - 3, 16, 3, wood);
+
+  rc(x + 158, y - 145, 5, 17, wood);
+  rc(x + 158, y - 128, 3, 8, woodLight);
+};
+
+const drawTownDebris = (night = 0) => {
+  const wood = blendColor("#76503a", "#393348", night);
+  const woodLight = blendColor("#a87950", "#62516a", night);
+  const cloth = blendColor("#a77e91", "#66536e", night);
+  const clothLight = blendColor("#c99aaa", "#89708c", night);
+  const stone = blendColor("#77717a", "#45445b", night);
+  const stoneLight = blendColor("#aaa0a0", "#686078", night);
+
+  const debrisPatches = [
+    { x: 65, type: 0 },
+    { x: 100, type: 1 },
+    { x: 260, type: 2 },
+    { x: 490, type: 0 },
+    { x: 760, type: 1 },
+    { x: 920, type: 2 },
+    { x: 1160, type: 0 },
+    { x: 1480, type: 2 },
+    { x: 1690, type: 1 },
+    { x: 2050, type: 0 },
+    { x: 2260, type: 2 },
+    { x: 2550, type: 1 },
+    { x: 2820, type: 0 },
+    { x: 3200, type: 2 },
+    { x: 3500, type: 1 },
+    { x: 3800, type: 0 },
+    { x: 4100, type: 2 },
+    { x: 4450, type: 1 },
+    { x: 4750, type: 0 },
+    { x: 5100, type: 2 },
+    { x: 5450, type: 1 },
+    { x: 5800, type: 0 },
+    { x: 6150, type: 2 }
+  ];
+
+  debrisPatches.forEach((patch, index) => {
+    const sx = px(patch.x);
+
+    if (sx < -100 || sx > W + 100) return;
+
+    const y = GY;
+
+    if (patch.type === 0) {
+      rc(sx, y - 5, 25, 4, wood);
+      rc(sx + 5, y - 8, 16, 3, woodLight);
+      rc(sx + 28, y - 3, 9, 3, wood);
+      rc(sx + 35, y - 2, 5, 2, stone);
+    }
+
+    if (patch.type === 1) {
+      rc(sx, y - 4, 13, 4, stone);
+      rc(sx + 4, y - 7, 8, 3, stoneLight);
+      rc(sx + 19, y - 5, 17, 3, cloth);
+      rc(sx + 23, y - 8, 8, 3, clothLight);
+      rc(sx + 35, y - 2, 5, 2, stone);
+    }
+
+    if (patch.type === 2) {
+      rc(sx, y - 4, 20, 4, wood);
+      rc(sx + 5, y - 7, 13, 3, woodLight);
+      rc(sx + 23, y - 3, 12, 3, cloth);
+      rc(sx + 27, y - 6, 7, 3, clothLight);
+      rc(sx + 39, y - 2, 5, 2, stoneLight);
+    }
+
+    if (index % 3 === 0) {
+      rc(sx - 8, y - 2, 4, 2, stoneLight);
+      rc(sx + 48, y - 3, 5, 3, stone);
+    }
+
+    if (index % 4 === 0) {
+      rc(sx + 13, y - 12, 9, 3, wood);
+      rc(sx + 17, y - 15, 4, 3, woodLight);
+    }
+  });
+};
 
 export const drawEnvironment = ({
   coins = [],
@@ -1165,6 +1307,8 @@ export const drawEnvironment = ({
   drawBushes(currentNight);
   drawFlowers(currentNight);
   drawGround(currentNight);
+  drawTownBanner(currentNight);
+  drawTownDebris(currentNight);
   drawGrassDetails(currentNight);
 
   drawBreezeGrass(time, currentNight);

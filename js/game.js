@@ -139,7 +139,85 @@ const npcIntroSeen = new Set();
 
 
 
+const FIXED_NPC_NAMES = new Set(["Zed", "Finn"]);
 
+let originalNPCPositions = null;
+
+const shuffleArray = array => {
+  const result = [...array];
+
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+
+  return result;
+};
+
+const createNonIdentityShuffle = entries => {
+  if (entries.length < 2) return [...entries];
+
+  let shuffled = shuffleArray(entries);
+  let attempts = 0;
+
+  while (
+    attempts < 100 &&
+    shuffled.some(
+      (entry, index) => entry.ownerName === entries[index].ownerName
+    )
+  ) {
+    shuffled = shuffleArray(entries);
+    attempts++;
+  }
+
+  if (
+    shuffled.some(
+      (entry, index) => entry.ownerName === entries[index].ownerName
+    )
+  ) {
+    shuffled = entries.slice(1).concat(entries[0]);
+  }
+
+  return shuffled;
+};
+
+const randomizeNPCPositions = () => {
+  if (!Array.isArray(NPCS) || NPCS.length < 2) return;
+
+  // Capture the original Java-loaded positions once.
+  if (!originalNPCPositions) {
+    originalNPCPositions = new Map(
+      NPCS.map(npc => [npc.name, npc.x])
+    );
+  }
+
+  const movableNPCs = NPCS.filter(
+    npc => !FIXED_NPC_NAMES.has(npc.name)
+  );
+
+  if (movableNPCs.length < 2) return;
+
+  const originalPositions = movableNPCs.map(npc => ({
+    ownerName: npc.name,
+    x: originalNPCPositions.get(npc.name)
+  }));
+
+  const shuffledPositions =
+    createNonIdentityShuffle(originalPositions);
+
+  movableNPCs.forEach((npc, index) => {
+    npc.x = shuffledPositions[index].x;
+  });
+
+  console.table(
+    NPCS.map(npc => ({
+      NPC: npc.name,
+      Position: npc.x,
+      Fixed: FIXED_NPC_NAMES.has(npc.name)
+    }))
+  );
+};
 
 let inventoryExpanded = false;
 
@@ -667,7 +745,7 @@ const setVisible = (id, visible) => {
 };
 
 const showScreen = screenId => {
-  ["menu","name", "tut", "set", "pause", "quest", "leaderboard", "end"].forEach(id => {
+  ["menu","name", "tut", "set", "pause", "quest", "leaderboard", "end", "credits"].forEach(id => {
     const element = getElement(id);
 
     if (!element) return;
@@ -1824,6 +1902,9 @@ const startNewGame = () => {
 
   document.body.classList.remove("boss-fight-active");
 
+  // Randomize NPC positions before starting the new game.
+  randomizeNPCPositions();
+
   initializeProgression();
 
   game.player = createPlayer();
@@ -1860,9 +1941,6 @@ const startNewGame = () => {
   npcIntroSeen.clear();
   completedNPCNames.clear();
 
-
-  console.log("New quest order:", game.questOrder);
-
   game.mode = "play";
 
   renderInventoryHUD();
@@ -1879,6 +1957,8 @@ const startNewGame = () => {
 
   updateCamera(game.player);
   updateHUD();
+
+  console.log("New game started with randomized NPC positions.");
 };
 
 const pauseGame = () => {
@@ -1893,16 +1973,22 @@ const pauseGame = () => {
 };
 
 const endGame = victory => {
-  if (game.mode === "end") return;
+  if (game.mode === "end" || game.mode === "credits") return;
+
   document.body.classList.remove("boss-fight-active");
-if (!victory) {
-  playGameOverSound();
-}
+
+  if (!victory) {
+    playGameOverSound();
+  }
+
   game.mode = "end";
+
   stopBossMusic();
+
   clearInterval(game.boss.timer);
-game.boss.timer = null;
-game.boss.active = false;
+  game.boss.timer = null;
+  game.boss.active = false;
+
   closeDialogue();
 
   const levelScore = game.score + game.candies * 10;
@@ -1924,12 +2010,13 @@ game.boss.active = false;
     : levelScore;
 
   game.score = total;
+
   submitLeaderboardScore(
-  game.playerName || "Player",
-  total
-).catch(error => {
-  console.error("Leaderboard save failed:", error);
-});
+    game.playerName || "Player",
+    total
+  ).catch(error => {
+    console.error("Leaderboard save failed:", error);
+  });
 
   if (total > game.bestScore) {
     saveBestScore(total);
@@ -1937,6 +2024,7 @@ game.boss.active = false;
   }
 
   const seconds = Math.floor(game.elapsedTime);
+
   const formattedTime =
     `${pad(Math.floor(seconds / 60))}:${pad(seconds % 60)}`;
 
@@ -2005,6 +2093,16 @@ game.boss.active = false;
 
       <div class="result-buttons">
 
+        ${victory ? `
+          <button
+            class="result-button"
+            type="button"
+            id="resultCredits"
+          >
+            VIEW CREDITS
+          </button>
+        ` : ""}
+
         <button
           class="result-button"
           type="button"
@@ -2035,12 +2133,78 @@ game.boss.active = false;
     game.activeNPC = null;
     Round.s = null;
 
-    showScreen("menu");
+    showMenu();
   });
 
+  getElement("resultCredits")?.addEventListener("click", startCredits);
+
   showScreen("end");
+
   stopGameMusic();
-stopBossMusic();
+  stopBossMusic();
+};
+
+const startCredits = () => {
+  if (game.mode !== "end" || !game.boss.defeated) return;
+
+  closeDialogue(true);
+
+  game.mode = "credits";
+
+  stopGameMusic();
+  stopBossMusic();
+
+  setVisible("hud", false);
+  setVisible("hud2", false);
+  setVisible("pauseBtn", false);
+
+  const roll = getElement("creditsRoll");
+  const finale = getElement("creditsFinale");
+  const skipButton = getElement("creditsSkip");
+
+  if (!roll || !finale) return;
+
+  showScreen("credits");
+
+  roll.hidden = false;
+  finale.hidden = true;
+
+  if (skipButton) {
+    skipButton.hidden = false;
+  }
+
+  roll.style.animation = "none";
+
+  void roll.offsetHeight;
+
+  roll.onanimationend = event => {
+    if (event.animationName === "credits-scroll") {
+      finishCredits();
+    }
+  };
+
+  roll.style.animation = "";
+};
+
+const finishCredits = () => {
+  if (game.mode !== "credits") return;
+
+  const roll = getElement("creditsRoll");
+  const finale = getElement("creditsFinale");
+  const skipButton = getElement("creditsSkip");
+
+  if (roll) {
+    roll.hidden = true;
+    roll.onanimationend = null;
+  }
+
+  if (skipButton) {
+    skipButton.hidden = true;
+  }
+
+  if (finale) {
+    finale.hidden = false;
+  }
 };
 
 const showMenu = () => {
@@ -2063,31 +2227,33 @@ const showMenu = () => {
 };
 
 /* ---------- ACTIONS ---------- */
-
 const handleAction = action => {
   if (
-  action === "escape" &&
-  (
-    game.mode === "boss" ||
-    game.boss.active ||
-    game.activeNPC === BOSS
-  )
-) {
-  return;
-}
+    action === "escape" &&
+    (
+      game.mode === "boss" ||
+      game.boss.active ||
+      game.activeNPC === BOSS
+    )
+  ) {
+    return;
+  }
+
   unlockAudio();
+
   switch (action) {
-   case "start":
-  showNameEntry();
-  break;
+    case "start":
+      showNameEntry();
+      break;
 
-  case "nameContinue":
-    confirmPlayerName();
-    break;
+    case "nameContinue":
+      confirmPlayerName();
+      break;
 
-  case "nameBack":
-    showMenu();
-    break;
+    case "nameBack":
+      showMenu();
+      break;
+
     case "go":
     case "retry":
       startNewGame();
@@ -2097,7 +2263,7 @@ const handleAction = action => {
       interact();
       break;
 
-      case "leaderboard":
+    case "leaderboard":
       showLeaderboard();
       break;
 
@@ -2105,9 +2271,17 @@ const handleAction = action => {
       showMenu();
       break;
 
-case "leaderboardExport":
-  downloadLeaderboard();
-  break;
+    case "leaderboardExport":
+      downloadLeaderboard();
+      break;
+
+    case "skipCredits":
+      finishCredits();
+      break;
+
+    case "creditsMenu":
+      showMenu();
+      break;
 
     case "later":
       if (game.mode === "quest" && Round.s && !Round.over()) {
@@ -2153,8 +2327,8 @@ case "leaderboardExport":
       break;
 
     case "tsound":
-       setSoundEnabled(true);
-  showToast("SOUND IS ALWAYS ON!");
+      setSoundEnabled(true);
+      showToast("SOUND IS ALWAYS ON!");
       break;
 
     case "tscan":
@@ -2190,25 +2364,23 @@ case "leaderboardExport":
 };
 
 /* ---------- UPDATE AND DRAW ---------- */
-/* ---------- UPDATE AND DRAW ---------- */
 
 const updateGame = deltaTime => {
-  if (!game.player) return;
-
-  if (["play", "quest", "boss"].includes(game.mode)) {
-    game.elapsedTime += deltaTime / 1000;
-  }
-
-  if (game.mode !== "play") return;
-
-  if (
-    game.boss.revealCutsceneActive ||
-    dialogue.bossIntroActive ||
-    (dialogue.npc && dialogue.typing)
-  ) {
+  if (game.mode !== "play" || !game.player) return;
+if (
+  game.boss.revealCutsceneActive ||
+  dialogue.bossIntroActive ||
+  (dialogue.npc && dialogue.typing)
+) {
+  updateFX(deltaTime);
+  return;
+}
+  if (dialogue.bossIntroActive) {
     updateFX(deltaTime);
     return;
   }
+
+  game.elapsedTime += deltaTime / 1000;
 
   updatePlayer(
     game.player,

@@ -1,0 +1,189 @@
+#credits.screen-view {
+    overflow: hidden;
+    background: #10182f;
+}
+
+#credits .credits-scene {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    isolation: isolate;
+    color: #f7f3e8;
+    background: radial-gradient(circle at 50% 25%, #293b70 0%, #141f3e 50%, #080e20 100%);
+}
+
+#credits .credits-scene::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.55;
+    background-image:
+        radial-gradient(circle, #ffffff 1px, transparent 1.5px),
+        radial-gradient(circle, #ffd166 1px, transparent 1.5px);
+    background-size: 73px 83px, 113px 127px;
+    background-position: 15px 20px, 50px 40px;
+}
+
+#credits .credits-scene::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 22%;
+    background: #080e20;
+    clip-path: polygon(
+        0 40%, 8% 40%, 8% 20%, 14% 20%, 14% 48%,
+        21% 48%, 21% 28%, 28% 28%, 28% 10%, 35% 10%,
+        35% 45%, 43% 45%, 43% 25%, 50% 25%,
+        50% 45%, 58% 45%, 58% 15%, 66% 15%,
+        66% 38%, 74% 38%, 74% 22%, 82% 22%,
+        82% 48%, 90% 48%, 90% 28%, 100% 28%,
+        100% 100%, 0 100%
+    );
+}
+
+#credits .credits-roll {
+    position: absolute;
+    z-index: 1;
+    top: 100%;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 30px 50px;
+    text-align: center;
+    animation: credits-scroll 42s linear forwards;
+}
+
+#credits .credits-roll h1 {
+    margin: 0 0 12px;
+    color: #ffd166;
+    font-size: 30px;
+    letter-spacing: 3px;
+}
+
+#credits .credits-roll h2 {
+    margin: 0 0 16px;
+    color: #ffd166;
+    font-size: 17px;
+    letter-spacing: 2px;
+}
+
+#credits .credits-roll p {
+    margin: 5px 0;
+    color: #dce5f2;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+#credits .credits-subtitle {
+    letter-spacing: 3px;
+    font-size: 11px !important;
+    color: #91a4cb !important;
+}
+
+#credits .credits-spacer {
+    height: 65px;
+    flex-shrink: 0;
+}
+
+#credits .credits-divider {
+    width: 90px;
+    height: 2px;
+    margin: 45px 0;
+    background: #ffd166;
+    opacity: 0.7;
+}
+
+@keyframes credits-scroll {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(calc(-100% - 100vh));
+    }
+}
+
+#credits .credits-skip-button {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 3;
+    padding: 9px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(8, 14, 32, 0.8);
+    color: #fff;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+#credits .credits-finale {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 25px;
+    text-align: center;
+    background: rgba(8, 14, 32, 0.95);
+}
+
+#credits .credits-finale[hidden],
+#credits .credits-roll[hidden],
+#credits .credits-skip-button[hidden] {
+    display: none;
+}
+
+#credits .credits-final-label {
+    margin: 0 0 15px;
+    color: #91a4cb;
+    font-size: 11px;
+    letter-spacing: 4px;
+}
+
+#credits .credits-finale h1 {
+    margin: 0;
+    color: #ffd166;
+    font-size: 46px;
+    letter-spacing: 5px;
+}
+
+#credits .credits-final-message {
+    max-width: 360px;
+    margin: 20px 0 35px;
+    color: #dce5f2;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+#credits .credits-finale h2 {
+    margin: 0 0 25px;
+    color: #fff;
+    font-size: 15px;
+    letter-spacing: 2px;
+}
+
+#credits .credits-menu-button {
+    padding: 13px 22px;
+    border: 0;
+    background: #ffd166;
+    color: #10182f;
+    font: inherit;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#credits .credits-menu-button:hover {
+    background: #ffe09a;
+}
