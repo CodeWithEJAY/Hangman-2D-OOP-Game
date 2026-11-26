@@ -745,7 +745,7 @@ const setVisible = (id, visible) => {
 };
 
 const showScreen = screenId => {
-  ["menu","name", "tut", "set", "pause", "quest", "leaderboard", "end"].forEach(id => {
+  ["menu","name", "tut", "set", "pause", "quest", "leaderboard", "end", "credits"].forEach(id => {
     const element = getElement(id);
 
     if (!element) return;
@@ -1973,16 +1973,22 @@ const pauseGame = () => {
 };
 
 const endGame = victory => {
-  if (game.mode === "end") return;
+  if (game.mode === "end" || game.mode === "credits") return;
+
   document.body.classList.remove("boss-fight-active");
-if (!victory) {
-  playGameOverSound();
-}
+
+  if (!victory) {
+    playGameOverSound();
+  }
+
   game.mode = "end";
+
   stopBossMusic();
+
   clearInterval(game.boss.timer);
-game.boss.timer = null;
-game.boss.active = false;
+  game.boss.timer = null;
+  game.boss.active = false;
+
   closeDialogue();
 
   const levelScore = game.score + game.candies * 10;
@@ -2004,12 +2010,13 @@ game.boss.active = false;
     : levelScore;
 
   game.score = total;
+
   submitLeaderboardScore(
-  game.playerName || "Player",
-  total
-).catch(error => {
-  console.error("Leaderboard save failed:", error);
-});
+    game.playerName || "Player",
+    total
+  ).catch(error => {
+    console.error("Leaderboard save failed:", error);
+  });
 
   if (total > game.bestScore) {
     saveBestScore(total);
@@ -2017,6 +2024,7 @@ game.boss.active = false;
   }
 
   const seconds = Math.floor(game.elapsedTime);
+
   const formattedTime =
     `${pad(Math.floor(seconds / 60))}:${pad(seconds % 60)}`;
 
@@ -2085,6 +2093,16 @@ game.boss.active = false;
 
       <div class="result-buttons">
 
+        ${victory ? `
+          <button
+            class="result-button"
+            type="button"
+            id="resultCredits"
+          >
+            VIEW CREDITS
+          </button>
+        ` : ""}
+
         <button
           class="result-button"
           type="button"
@@ -2115,12 +2133,78 @@ game.boss.active = false;
     game.activeNPC = null;
     Round.s = null;
 
-    showScreen("menu");
+    showMenu();
   });
 
+  getElement("resultCredits")?.addEventListener("click", startCredits);
+
   showScreen("end");
+
   stopGameMusic();
-stopBossMusic();
+  stopBossMusic();
+};
+
+const startCredits = () => {
+  if (game.mode !== "end" || !game.boss.defeated) return;
+
+  closeDialogue(true);
+
+  game.mode = "credits";
+
+  stopGameMusic();
+  stopBossMusic();
+
+  setVisible("hud", false);
+  setVisible("hud2", false);
+  setVisible("pauseBtn", false);
+
+  const roll = getElement("creditsRoll");
+  const finale = getElement("creditsFinale");
+  const skipButton = getElement("creditsSkip");
+
+  if (!roll || !finale) return;
+
+  showScreen("credits");
+
+  roll.hidden = false;
+  finale.hidden = true;
+
+  if (skipButton) {
+    skipButton.hidden = false;
+  }
+
+  roll.style.animation = "none";
+
+  void roll.offsetHeight;
+
+  roll.onanimationend = event => {
+    if (event.animationName === "credits-scroll") {
+      finishCredits();
+    }
+  };
+
+  roll.style.animation = "";
+};
+
+const finishCredits = () => {
+  if (game.mode !== "credits") return;
+
+  const roll = getElement("creditsRoll");
+  const finale = getElement("creditsFinale");
+  const skipButton = getElement("creditsSkip");
+
+  if (roll) {
+    roll.hidden = true;
+    roll.onanimationend = null;
+  }
+
+  if (skipButton) {
+    skipButton.hidden = true;
+  }
+
+  if (finale) {
+    finale.hidden = false;
+  }
 };
 
 const showMenu = () => {
@@ -2143,31 +2227,33 @@ const showMenu = () => {
 };
 
 /* ---------- ACTIONS ---------- */
-
 const handleAction = action => {
   if (
-  action === "escape" &&
-  (
-    game.mode === "boss" ||
-    game.boss.active ||
-    game.activeNPC === BOSS
-  )
-) {
-  return;
-}
+    action === "escape" &&
+    (
+      game.mode === "boss" ||
+      game.boss.active ||
+      game.activeNPC === BOSS
+    )
+  ) {
+    return;
+  }
+
   unlockAudio();
+
   switch (action) {
-   case "start":
-  showNameEntry();
-  break;
+    case "start":
+      showNameEntry();
+      break;
 
-  case "nameContinue":
-    confirmPlayerName();
-    break;
+    case "nameContinue":
+      confirmPlayerName();
+      break;
 
-  case "nameBack":
-    showMenu();
-    break;
+    case "nameBack":
+      showMenu();
+      break;
+
     case "go":
     case "retry":
       startNewGame();
@@ -2177,7 +2263,7 @@ const handleAction = action => {
       interact();
       break;
 
-      case "leaderboard":
+    case "leaderboard":
       showLeaderboard();
       break;
 
@@ -2185,9 +2271,17 @@ const handleAction = action => {
       showMenu();
       break;
 
-case "leaderboardExport":
-  downloadLeaderboard();
-  break;
+    case "leaderboardExport":
+      downloadLeaderboard();
+      break;
+
+    case "skipCredits":
+      finishCredits();
+      break;
+
+    case "creditsMenu":
+      showMenu();
+      break;
 
     case "later":
       if (game.mode === "quest" && Round.s && !Round.over()) {
@@ -2233,8 +2327,8 @@ case "leaderboardExport":
       break;
 
     case "tsound":
-       setSoundEnabled(true);
-  showToast("SOUND IS ALWAYS ON!");
+      setSoundEnabled(true);
+      showToast("SOUND IS ALWAYS ON!");
       break;
 
     case "tscan":
@@ -2269,7 +2363,6 @@ case "leaderboardExport":
   }
 };
 
-/* ---------- UPDATE AND DRAW ---------- */
 /* ---------- UPDATE AND DRAW ---------- */
 
 const updateGame = deltaTime => {
