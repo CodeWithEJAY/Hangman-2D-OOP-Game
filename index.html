@@ -514,87 +514,109 @@
                END CREDITS
             =============================== -->
 
-           <section id="end" class="screen-view"></section>
 
-            <!-- ==============================
-                END CREDITS
-            =============================== -->
+           <section id="credits" class="screen-view" hidden>
+    <div class="credits-scene">
+        <div class="credits-roll" id="creditsRoll">
 
-            <section id="credits" class="screen-view" hidden>
+            <div class="credits-opening">
+                <span class="credits-eyebrow">THE JOURNEY HAS ENDED</span>
+                <h1>HANK'S LAST STAND</h1>
+                <p class="credits-subtitle">A TOWN QUEST ADVENTURE</p>
+            </div>
 
-                <div class="credits-scene">
+            <div class="credits-section">
+                <span>THE ADVENTURE</span>
+                <h2>ONE UNEXPECTED JOURNEY</h2>
+                <p>What began as a simple stop along the road</p>
+                <p>became a journey Hank would never forget.</p>
+                <p>Eight villagers. Countless challenges.</p>
+                <p>And a truth hidden beneath it all.</p>
+                <div class="credits-divider"></div>
+            </div>
 
-                    <!-- Scrolling Credits -->
-                    <div class="credits-roll" id="creditsRoll">
+            <div class="credits-section">
+                <span>THE PEOPLE BEHIND THE GAME</span>
+                <h2>PROJECT DEVELOPMENT</h2>
 
-                        <h1>HANK'S LAST STAND</h1>
-                        <p class="credits-subtitle">A TOWN QUEST ADVENTURE</p>
+                <p class="credits-role">PROGRAMMER</p>
+                <h3>Cedrick A. Eusebio</h3>
 
-                        <div class="credits-spacer"></div>
+                <p class="credits-role">GAME DESIGNER</p>
+                <h3>Erickson Joseph Kristoffer P. Luna</h3>
 
-                        <h2>THE STORY</h2>
-                        <p>A town once troubled is finally at peace.</p>
-                        <p>Thanks to Hank, everyone can smile again.</p>
+                <p class="credits-role">DOCUMENTATION</p>
+                <h3>Jasmine Quintina L. Roque</h3>
 
-                        <div class="credits-divider"></div>
+                <div class="credits-divider"></div>
+            </div>
 
-                        <h2>GAME DEVELOPMENT</h2>
-                        <p>YOUR NAME HERE</p>
-                        <p>YOUR TEAM MEMBERS HERE</p>
+            <div class="credits-section">
+                <span>BRINGING THE GAME TO LIFE</span>
+                <h2>PROJECT PRESENTATION</h2>
 
-                        <div class="credits-spacer"></div>
+                <p class="credits-role">CODE PRESENTATION</p>
+                <h3>Cedrick A. Eusebio</h3>
 
-                        <h2>GAME DESIGN</h2>
-                        <p>YOUR NAME HERE</p>
+                <p class="credits-role">GAME PRESENTATION</p>
+                <h3>Luigi Sebastian I. Bautista</h3>
 
-                        <div class="credits-spacer"></div>
+                <p class="credits-role">PROJECT FACILITATOR</p>
+                <h3>Gino Vargas</h3>
 
-                        <h2>PROGRAMMING</h2>
-                        <p>YOUR NAME HERE</p>
+                <div class="credits-divider"></div>
+            </div>
 
-                        <div class="credits-spacer"></div>
+            <div class="credits-section">
+                <span>WITH GRATITUDE</span>
+                <h2>SPECIAL THANKS</h2>
+                <p>To everyone who helped bring this game to life.</p>
+                <p>To those who played, tested, and supported us.</p>
+                <p>This adventure wouldn't be the same without you.</p>
+                <div class="credits-divider"></div>
+            </div>
 
-                        <h2>SPECIAL THANKS</h2>
-                        <p>To everyone who supported this project.</p>
-                        <p>And to everyone who helped save the town.</p>
+            <div class="credits-section">
+                <span>OWNERSHIP & RIGHTS</span>
+                <h2>COPYRIGHT NOTICE</h2>
+                <p>HANK'S LAST STAND</p>
+                <p>© 2026 Hank's Last Stand Development Team.</p>
+                <p>All rights reserved.</p>
+                <p>Original project content belongs to its respective creators.</p>
+                <p>Third-party assets and resources remain the property of their respective owners.</p>
+                <div class="credits-divider"></div>
+            </div>
 
-                        <div class="credits-spacer"></div>
+            <div class="credits-ending">
+                <h1>THANK YOU</h1>
+                <p>FOR BEING PART OF THIS ADVENTURE</p>
+                <span>HANK'S LAST STAND</span>
+            </div>
 
-                        <h1>THANK YOU FOR PLAYING!</h1>
-                        <p>HANK'S LAST STAND</p>
+        </div>
 
-                        <div class="credits-spacer"></div>
+        <button type="button" class="credits-skip-button" id="creditsSkip">
+            SKIP →
+        </button>
+    </div>
 
-                    </div>
+    <div class="credits-finale" id="creditsFinale" hidden>
+        <span class="credits-final-label">THE END OF THE JOURNEY</span>
 
-                    <!-- Skip Credits -->
-                    <button class="credits-skip-button" id="creditsSkip" type="button" data-act="skipCredits">
-                        SKIP →
-                    </button>
+        <h1>THANK YOU<br>FOR PLAYING!</h1>
 
-                    <!-- Final Ending -->
-                    <div class="credits-finale" id="creditsFinale" hidden>
+        <p class="credits-final-message">
+            Every adventure has an ending.<br>
+            But this one wouldn't have been possible without you.
+        </p>
 
-                        <p class="credits-final-label">HANK'S LAST STAND</p>
+        <h2>HANK'S LAST STAND · A TOWN QUEST ADVENTURE</h2>
 
-                        <h1>THE END</h1>
-
-                        <p class="credits-final-message">
-                            And just like that, the town found its happiness again.
-                        </p>
-
-                        <h2>THANK YOU FOR PLAYING!</h2>
-
-                        <button type="button" class="credits-menu-button" data-act="creditsMenu">
-                            RETURN TO MAIN MENU
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </section>
-
+        <button type="button" class="credits-menu-button" id="creditsMenu">
+            RETURN TO MAIN MENU
+        </button>
+    </div>
+</section>
             <!-- CRT overlay -->
             <div class="scanline-overlay"></div>
 

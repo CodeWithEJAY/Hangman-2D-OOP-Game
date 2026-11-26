@@ -61,6 +61,20 @@
     animation: credits-scroll 42s linear forwards;
 }
 
+#credits .credits-opening {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 110px;
+}
+
+#credits .credits-eyebrow {
+    margin-bottom: 18px;
+    color: #91a4cb;
+    font-size: 11px;
+    letter-spacing: 4px;
+}
+
 #credits .credits-roll h1 {
     margin: 0 0 12px;
     color: #ffd166;
@@ -83,22 +97,77 @@
 }
 
 #credits .credits-subtitle {
-    letter-spacing: 3px;
-    font-size: 11px !important;
+    margin-top: 5px !important;
     color: #91a4cb !important;
+    font-size: 11px !important;
+    letter-spacing: 3px;
 }
 
-#credits .credits-spacer {
-    height: 65px;
-    flex-shrink: 0;
+#credits .credits-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 75px;
+}
+
+#credits .credits-section > span {
+    margin-bottom: 12px;
+    color: #91a4cb;
+    font-size: 10px;
+    letter-spacing: 3px;
+}
+
+#credits .credits-section h3 {
+    margin: 3px 0 18px;
+    color: #f7f3e8;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+#credits .credits-section .credits-role {
+    margin-top: 12px;
+    color: #91a4cb;
+    font-size: 10px;
+    letter-spacing: 2px;
 }
 
 #credits .credits-divider {
     width: 90px;
     height: 2px;
-    margin: 45px 0;
+    margin: 45px 0 0;
     background: #ffd166;
     opacity: 0.7;
+    flex-shrink: 0;
+}
+
+#credits .credits-ending {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
+#credits .credits-ending h1 {
+    margin: 0 0 12px;
+    color: #ffd166;
+    font-size: 32px;
+    letter-spacing: 4px;
+}
+
+#credits .credits-ending p {
+    color: #dce5f2;
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+
+#credits .credits-ending span {
+    margin-top: 20px;
+    color: #91a4cb;
+    font-size: 10px;
+    letter-spacing: 3px;
 }
 
 @keyframes credits-scroll {
@@ -123,6 +192,13 @@
     font: inherit;
     font-size: 11px;
     cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+#credits .credits-skip-button:hover {
+    border-color: #ffd166;
+    background: #ffd166;
+    color: #10182f;
 }
 
 #credits .credits-finale {
@@ -141,7 +217,7 @@
 #credits .credits-finale[hidden],
 #credits .credits-roll[hidden],
 #credits .credits-skip-button[hidden] {
-    display: none;
+    display: none !important;
 }
 
 #credits .credits-final-label {
@@ -182,8 +258,40 @@
     font-size: 12px;
     font-weight: bold;
     cursor: pointer;
+    transition: background 0.2s ease;
 }
 
 #credits .credits-menu-button:hover {
     background: #ffe09a;
+}
+
+@media (max-width: 600px) {
+    #credits .credits-roll {
+        padding-right: 18px;
+        padding-left: 18px;
+    }
+
+    #credits .credits-roll h1 {
+        font-size: 25px;
+    }
+
+    #credits .credits-roll h2 {
+        font-size: 15px;
+    }
+
+    #credits .credits-roll p {
+        font-size: 12px;
+    }
+
+    #credits .credits-section h3 {
+        font-size: 13px;
+    }
+
+    #credits .credits-finale h1 {
+        font-size: 34px;
+    }
+
+    #credits .credits-finale h2 {
+        font-size: 12px;
+    }
 }

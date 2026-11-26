@@ -134,6 +134,27 @@ cameraPanFrom: null,
 cameraPanTarget: null
 }
 };
+
+
+const showMenu = () => {
+  closeDialogue(true);
+
+  game.mode = "menu";
+  game.activeNPC = null;
+
+  showScreen("menu");
+
+  setVisible("hud", false);
+  setVisible("hud2", false);
+  setVisible("pauseBtn", false);
+
+  const bestText = getElement("bestTxt");
+
+  if (bestText) {
+    bestText.textContent = pad(game.bestScore, 6);
+  }
+};
+
 const completedNPCNames = new Set();
 const npcIntroSeen = new Set();
 
@@ -2086,7 +2107,6 @@ const pauseGame = () => {
     showScreen(null);
   }
 };
-
 const endGame = victory => {
   if (game.mode === "end" || game.mode === "credits") return;
 
@@ -2207,51 +2227,33 @@ const endGame = victory => {
       </div>
 
       <div class="result-buttons">
-
         ${victory ? `
           <button
             class="result-button"
             type="button"
-            id="resultCredits"
+            id="resultContinue"
           >
-            VIEW CREDITS
+            CONTINUE →
           </button>
-        ` : ""}
-
-        <button
-          class="result-button"
-          type="button"
-          id="resultRetry"
-        >
-          PLAY AGAIN
-        </button>
-
-        <button
-          class="result-button"
-          type="button"
-          id="resultMenu"
-        >
-          MAIN MENU
-        </button>
-
+        ` : `
+          <button
+            class="result-button"
+            type="button"
+            id="resultRetry"
+          >
+            TRY AGAIN
+          </button>
+        `}
       </div>
 
     </div>
   `;
 
-  getElement("resultRetry").addEventListener("click", () => {
-    startNewGame();
-  });
-
-  getElement("resultMenu").addEventListener("click", () => {
-    game.mode = "menu";
-    game.activeNPC = null;
-    Round.s = null;
-
-    showMenu();
-  });
-
-  getElement("resultCredits")?.addEventListener("click", startCredits);
+  if (victory) {
+    getElement("resultContinue").addEventListener("click", startCredits);
+  } else {
+    getElement("resultRetry").addEventListener("click", startNewGame);
+  }
 
   showScreen("end");
 
@@ -2259,8 +2261,52 @@ const endGame = victory => {
   stopBossMusic();
 };
 
+
+const returnToCreditsMenu = () => {
+  if (game.mode !== "credits") return;
+
+  if (creditsWatchFrame !== null) {
+    cancelAnimationFrame(creditsWatchFrame);
+    creditsWatchFrame = null;
+  }
+
+  closeDialogue(true);
+
+  game.mode = "menu";
+  game.activeNPC = null;
+  Round.s = null;
+
+  showScreen("menu");
+
+  setVisible("hud", false);
+  setVisible("hud2", false);
+  setVisible("pauseBtn", false);
+
+  const bestText = getElement("bestTxt");
+
+  if (bestText) {
+    bestText.textContent = pad(game.bestScore, 6);
+  }
+};
+
+let creditsWatchFrame = null;
 const startCredits = () => {
   if (game.mode !== "end" || !game.boss.defeated) return;
+
+  const roll = getElement("creditsRoll");
+  const finale = getElement("creditsFinale");
+  const skipButton = getElement("creditsSkip");
+  const menuButton = getElement("creditsMenu");
+
+  if (!roll || !finale || !skipButton || !menuButton) {
+    console.error("Credits screen elements are missing.");
+    return;
+  }
+
+  if (creditsWatchFrame !== null) {
+    cancelAnimationFrame(creditsWatchFrame);
+    creditsWatchFrame = null;
+  }
 
   closeDialogue(true);
 
@@ -2273,36 +2319,60 @@ const startCredits = () => {
   setVisible("hud2", false);
   setVisible("pauseBtn", false);
 
-  const roll = getElement("creditsRoll");
-  const finale = getElement("creditsFinale");
-  const skipButton = getElement("creditsSkip");
-
-  if (!roll || !finale) return;
-
   showScreen("credits");
 
   roll.hidden = false;
   finale.hidden = true;
+  skipButton.hidden = false;
 
-  if (skipButton) {
-    skipButton.hidden = false;
-  }
+  skipButton.onclick = finishCredits;
 
-  roll.style.animation = "none";
-
-  void roll.offsetHeight;
+  menuButton.onclick = () => {
+    if (game.mode !== "credits") return;
+    showMenu();
+  };
 
   roll.onanimationend = event => {
-    if (event.animationName === "credits-scroll") {
+    if (
+      event.target === roll &&
+      event.animationName === "credits-scroll"
+    ) {
       finishCredits();
     }
   };
 
+  roll.style.animation = "none";
+  void roll.offsetHeight;
   roll.style.animation = "";
-};
 
+  const checkCreditsEnd = () => {
+    if (game.mode !== "credits" || roll.hidden) {
+      creditsWatchFrame = null;
+      return;
+    }
+
+    const lastSection = roll.querySelector(".credits-ending");
+
+    if (
+      lastSection &&
+      lastSection.getBoundingClientRect().bottom <= 0
+    ) {
+      finishCredits();
+      return;
+    }
+
+    creditsWatchFrame = requestAnimationFrame(checkCreditsEnd);
+  };
+
+  creditsWatchFrame = requestAnimationFrame(checkCreditsEnd);
+};
 const finishCredits = () => {
   if (game.mode !== "credits") return;
+
+  if (creditsWatchFrame !== null) {
+    cancelAnimationFrame(creditsWatchFrame);
+    creditsWatchFrame = null;
+  }
 
   const roll = getElement("creditsRoll");
   const finale = getElement("creditsFinale");
@@ -2321,28 +2391,20 @@ const finishCredits = () => {
     finale.hidden = false;
   }
 };
-
-const showMenu = () => {
-  closeDialogue(true);
-
-  game.mode = "menu";
-  game.activeNPC = null;
-
-  showScreen("menu");
-
-  setVisible("hud", false);
-  setVisible("hud2", false);
-  setVisible("pauseBtn", false);
-
-  const bestText = getElement("bestTxt");
-
-  if (bestText) {
-    bestText.textContent = pad(game.bestScore, 6);
-  }
-};
-
 /* ---------- ACTIONS ---------- */
 const handleAction = action => {
+  if (game.mode === "credits") {
+    if (action === "skipCredits") {
+      finishCredits();
+    }
+
+    if (action === "creditsMenu") {
+      returnToCreditsMenu();
+    }
+
+    return;
+  }
+
   if (
     action === "escape" &&
     (
@@ -2830,3 +2892,48 @@ export function testCompleteAllQuests() {
 }
 
 window.testCompleteAllQuests = testCompleteAllQuests;
+
+
+export function testVictoryEnding() {
+  clearInterval(game.boss.timer);
+  game.boss.timer = null;
+
+  clearTimeout(questFinishTimer);
+  clearQuestResult();
+  closeDialogue(true);
+
+  game.mode = "play";
+  game.activeNPC = null;
+  game.completed = NPCS.length;
+  game.hearts = 3;
+  game.candies = 35;
+  game.score = 2500;
+  game.elapsedTime = 125;
+
+  game.boss.unlocked = true;
+  game.boss.defeated = true;
+  game.boss.active = false;
+  game.boss.hp = 0;
+  game.boss.round = null;
+  game.boss.revealed = false;
+  game.boss.revealCutsceneActive = false;
+  game.boss.revealStartedAt = null;
+  game.boss.landingSoundPlayed = false;
+  game.boss.cameraPanFrom = null;
+  game.boss.cameraPanTarget = null;
+
+  Round.s = null;
+
+  setInputMode("world");
+
+  const previousName = game.playerName;
+  game.playerName = "VICTORY TEST";
+
+  endGame(true);
+
+  game.playerName = previousName;
+
+  console.log("Victory ending test started.");
+}
+
+window.testVictoryEnding = testVictoryEnding;
