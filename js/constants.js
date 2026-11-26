@@ -9,7 +9,7 @@ export const WORLD_WIDTH = 5400;
 export const TRUCK_X = 1450;
 
 export const PLAYER_SPEED = 175;
-export const JUMP_FORCE = 490;
+export const JUMP_FORCE = 480;
 export const GRAVITY = 1300;
 
 export const INITIAL_HEARTS = 3;
