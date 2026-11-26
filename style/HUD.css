@@ -135,38 +135,6 @@
     color: #ffd166;
 }
 
-.inventory-list {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    width: 125px;
-    max-height: 135px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #ffd166 transparent;
-}
-
-.inventory-item {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 25px;
-    padding: 4px 7px;
-    background: rgba(15, 27, 61, 0.86);
-    border: 1px solid rgba(255, 209, 102, 0.8);
-    border-radius: 3px;
-    color: #fff;
-    font-family: inherit;
-    font-size: 9px;
-    font-weight: 800;
-}
-
-.inventory-item-icon {
-    flex-shrink: 0;
-    font-size: 15px;
-}
 
 .inventory-item-name {
     overflow: hidden;
@@ -193,5 +161,240 @@
         width: 130px;
         padding: 6px 8px;
         font-size: 10px;
+    }
+}
+.bag-modal-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    padding: 18px;
+    overflow: hidden;
+    background: rgba(5, 10, 26, 0.76);
+    backdrop-filter: blur(4px);
+    animation: bag-modal-fade 0.2s ease both;
+}
+
+.bag-modal {
+    width: min(410px, 100%);
+    max-height: 90%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    box-sizing: border-box;
+    padding: 18px;
+    border: 2px solid #ffd166;
+    border-radius: 4px;
+    background: #16257a;
+    color: #fff;
+    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.25), 0 18px 45px rgba(0, 0, 0, 0.45);
+    animation: bag-modal-pop 0.2s ease both;
+}
+
+.bag-modal::-webkit-scrollbar {
+    display: none;
+}
+
+.bag-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.bag-modal-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bag-modal-icon {
+    display: grid;
+    place-items: center;
+    width: 43px;
+    height: 43px;
+    border: 1px solid rgba(255, 209, 102, 0.5);
+    background: rgba(255, 209, 102, 0.12);
+    font-size: 23px;
+    flex-shrink: 0;
+}
+
+.bag-modal-heading h2 {
+    margin: 0;
+    color: #ffd166;
+    font-size: 17px;
+    letter-spacing: 2px;
+}
+
+.bag-modal-heading span:not(.bag-modal-icon) {
+    display: block;
+    margin-top: 4px;
+    color: #aebbd3;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+}
+
+.bag-modal-close {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    width: 31px;
+    height: 31px;
+    min-width: 31px;
+    padding: 0;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 3px;
+    background: transparent;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 21px;
+    font-weight: 400;
+    line-height: 1;
+    text-align: center;
+    appearance: none;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.bag-modal-close:hover {
+    border-color: #ff6f7d;
+    background: #ff6f7d;
+}
+
+.bag-modal-close:focus-visible {
+    outline: 2px solid #ffd166;
+    outline-offset: 3px;
+}
+
+.bag-modal-divider {
+    height: 1px;
+    margin: 17px 0;
+    background: rgba(255, 209, 102, 0.3);
+}
+
+.bag-modal-section-label {
+    margin-bottom: 11px;
+    color: #ffd166;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.bag-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.bag-modal-slot {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1;
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: #202f82;
+}
+
+.bag-modal-slot.is-filled {
+    border-color: rgba(255, 209, 102, 0.45);
+    background: #263a91;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.bag-modal-slot.is-filled:hover {
+    border-color: #ffd166;
+    background: #3048a6;
+}
+
+.bag-modal-slot-icon {
+    display: grid;
+    place-items: center;
+    min-height: 40px;
+    font-size: clamp(22px, 5vw, 30px);
+    filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.25));
+}
+
+.bag-modal-slot-name {
+    width: 90%;
+    margin-top: 5px;
+    overflow: hidden;
+    color: #f5e8c5;
+    font-size: 9px;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bag-modal-slot.is-empty {
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(8, 17, 58, 0.3);
+}
+
+.bag-modal-empty-mark {
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 25px;
+}
+
+.bag-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 17px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    color: #aebbd3;
+    font-size: 9px;
+    letter-spacing: 1px;
+}
+
+@keyframes bag-modal-fade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes bag-modal-pop {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 480px) {
+    .bag-modal {
+        padding: 14px;
+    }
+
+    .bag-modal-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
+    }
+
+    .bag-modal-slot-name {
+        font-size: 8px;
+    }
+
+    .bag-modal-footer {
+        font-size: 8px;
     }
 }
