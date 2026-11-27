@@ -1,6 +1,6 @@
 /* this for game container */
 .game-console {
-    width: min(940px, 100%);
+    width: min(900px, 100%);
     padding: 16px;
 
     background: linear-gradient(#4a4f57, #32363c);

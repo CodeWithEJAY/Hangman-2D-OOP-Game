@@ -420,7 +420,7 @@ const renderInventoryHUD = () => {
 
   const inventory = game.inventory || [];
 
-  hud.hidden = game.mode !== "play" || inventory.length === 0;
+  hud.hidden = game.mode !== "play";
 
   if (hud.hidden) {
     inventoryExpanded = false;
@@ -449,7 +449,7 @@ const renderInventoryHUD = () => {
 
   const count = document.createElement("span");
   count.className = "inventory-count";
-  count.textContent = inventory.length;
+  count.textContent = items.length;
 
   toggle.append(icon, label, count);
   hud.appendChild(toggle);
@@ -510,7 +510,10 @@ const renderInventoryHUD = () => {
   const grid = document.createElement("div");
   grid.className = "bag-modal-grid";
 
-  const slotCount = Math.max(12, Math.ceil(items.length / 4) * 4);
+  const slotCount = Math.max(
+    12,
+    Math.ceil(items.length / 4) * 4
+  );
 
   for (let i = 0; i < slotCount; i++) {
     const entry = items[i];
@@ -544,7 +547,9 @@ const renderInventoryHUD = () => {
   footer.className = "bag-modal-footer";
 
   const itemCount = document.createElement("span");
-  itemCount.textContent = `${items.length} ITEMS COLLECTED`;
+  itemCount.textContent = items.length === 0
+    ? "NO ITEMS COLLECTED"
+    : `${items.length} ITEMS COLLECTED`;
 
   const closeHint = document.createElement("span");
   closeHint.textContent = "ESC TO CLOSE";
@@ -590,7 +595,6 @@ const renderInventoryHUD = () => {
 
   closeButton.focus();
 };
-
 
 const showLeaderboard = async () => {
   closeDialogue(true);
@@ -844,7 +848,7 @@ const defeatBoss = () => {
   game.boss.active = false;
   game.boss.defeated = true;
   playBossDefeatSound();
-    playQuestCompleteSound();
+  playQuestCompleteSound();
 
 
   game.activeNPC = null;
@@ -917,6 +921,7 @@ const pad = (number, length = 2) => {
   return String(Math.max(0, Math.round(number))).padStart(length, "0");
 };
 
+
 const updateHUD = () => {
   const progress = getQuestProgress();
   const seconds = Math.floor(game.elapsedTime);
@@ -937,10 +942,46 @@ const updateHUD = () => {
     }
   });
 
+  const trackerTitle = getElement("questTrackerTitle");
+  const trackerObjective = getElement("questTrackerObjective");
+  const trackerCount = getElement("questTrackerCount");
   const bar = getElement("bar");
 
+  if (game.boss.unlocked) {
+    if (trackerTitle) {
+      trackerTitle.textContent = "DEFEAT THE HANGMAN KING";
+    }
+
+    if (trackerObjective) {
+      trackerObjective.textContent = game.mode === "boss"
+        ? "Solve the King's words before time runs out."
+        : game.boss.defeated
+          ? "The village is safe. Your adventure is complete."
+          : "All villagers are free. Reach the end of the map.";
+    }
+  } else {
+    if (trackerTitle) {
+      trackerTitle.textContent = "FREE THE VILLAGERS";
+    }
+
+    if (trackerObjective) {
+      trackerObjective.textContent =
+        "Help the villagers and restore the town.";
+    }
+  }
+
+  if (trackerCount) {
+    trackerCount.textContent =
+      `${progress.completed}/${progress.total}`;
+  }
+
   if (bar) {
-    bar.innerHTML = "";
+    bar.replaceChildren();
+
+    bar.setAttribute(
+      "aria-label",
+      `${progress.completed} of ${progress.total} villagers helped`
+    );
 
     for (let i = 0; i < progress.total; i++) {
       const segment = document.createElement("i");
@@ -952,7 +993,133 @@ const updateHUD = () => {
       bar.appendChild(segment);
     }
   }
-};
+
+  const questLog = getElement("questLog");
+
+  if (questLog) {
+    const completedSignature = NPCS
+      .map(npc => completedNPCNames.has(npc.name) ? "1" : "0")
+      .join("");
+
+    const activeName = game.activeNPC?.name || "";
+
+    const bossStatus = game.boss.defeated
+      ? "complete"
+      : game.boss.unlocked
+        ? game.mode === "boss" ? "active" : "pending"
+        : "hidden";
+
+    const signature = [
+      completedSignature,
+      activeName,
+      bossStatus
+    ].join("|");
+
+    if (questLog.dataset.signature !== signature) {
+      const heading = document.createElement("div");
+      heading.className = "quest-log-heading";
+
+      const headingTitle = document.createElement("span");
+      headingTitle.className = "quest-log-heading-title";
+      headingTitle.textContent = "QUEST LOG";
+
+      const headingCount = document.createElement("span");
+      headingCount.className = "quest-log-heading-count";
+      headingCount.textContent =
+        `${progress.completed}/${progress.total}`;
+
+      heading.append(headingTitle, headingCount);
+
+      const list = document.createElement("div");
+      list.className = "quest-log-list";
+
+      NPCS.forEach(npc => {
+        const completed = completedNPCNames.has(npc.name);
+        const active = !completed && activeName === npc.name;
+
+        const entry = document.createElement("div");
+        entry.className = "quest-log-entry";
+
+        if (completed) {
+          entry.classList.add("is-complete");
+        } else if (active) {
+          entry.classList.add("is-active");
+        }
+
+        const icon = document.createElement("span");
+        icon.className = "quest-log-icon";
+        icon.textContent = completed ? "✓" : active ? "●" : "○";
+
+        const info = document.createElement("div");
+        info.className = "quest-log-info";
+
+        const name = document.createElement("span");
+        name.className = "quest-log-name";
+        name.textContent = npc.name.toUpperCase();
+
+        const goal = document.createElement("span");
+        goal.className = "quest-log-goal";
+        goal.textContent = npc.goal;
+
+        const status = document.createElement("span");
+        status.className = "quest-log-status";
+        status.textContent = completed
+          ? "DONE"
+          : active
+            ? "ACTIVE"
+            : "OPEN";
+
+        info.append(name, goal);
+        entry.append(icon, info, status);
+        list.appendChild(entry);
+      });
+
+      if (game.boss.unlocked) {
+        const entry = document.createElement("div");
+        entry.className = "quest-log-entry";
+
+        const completed = game.boss.defeated;
+        const active = !completed && game.mode === "boss";
+
+        if (completed) {
+          entry.classList.add("is-complete");
+        } else if (active) {
+          entry.classList.add("is-active");
+        }
+
+        const icon = document.createElement("span");
+        icon.className = "quest-log-icon";
+        icon.textContent = completed ? "✓" : active ? "●" : "○";
+
+        const info = document.createElement("div");
+        info.className = "quest-log-info";
+
+        const name = document.createElement("span");
+        name.className = "quest-log-name";
+        name.textContent = "THE HANGMAN KING";
+
+        const goal = document.createElement("span");
+        goal.className = "quest-log-goal";
+        goal.textContent = "Defeat the Hangman King";
+
+        const status = document.createElement("span");
+        status.className = "quest-log-status";
+        status.textContent = completed
+          ? "DONE"
+          : active
+            ? "ACTIVE"
+            : "OPEN";
+
+        info.append(name, goal);
+        entry.append(icon, info, status);
+        list.appendChild(entry);
+      }
+
+      questLog.replaceChildren(heading, list);
+      questLog.dataset.signature = signature;
+    }
+  }
+}
 
 const showToast = message => {
   const toast = getElement("toast");
@@ -2039,7 +2206,7 @@ const startNewGame = () => {
   document.body.classList.remove("boss-fight-active");
 
   // Randomize NPC positions before starting the new game.
-  randomizeNPCPositions();
+  // randomizeNPCPositions();
 
   initializeProgression();
 
