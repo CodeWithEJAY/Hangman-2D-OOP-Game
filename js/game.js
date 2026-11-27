@@ -135,6 +135,45 @@ cameraPanTarget: null
 }
 };
 
+let studioLaunchInProgress = false;
+
+const launchStudio = () => {
+  if (studioLaunchInProgress) return;
+
+  const overlay = getElement("studioIntroOverlay");
+
+  if (!overlay) {
+    console.error("Studio intro overlay not found.");
+    return;
+  }
+
+  studioLaunchInProgress = true;
+
+  startMenuMusic();
+
+  overlay.classList.add("is-closing");
+
+  window.setTimeout(() => {
+    overlay.hidden = true;
+    overlay.classList.remove("is-closing");
+
+    showMenu(false);
+
+    studioLaunchInProgress = false;
+  }, 700);
+};  
+
+const bindStudioIntro = () => {
+  const overlay = getElement("studioIntroOverlay");
+
+  if (!overlay || overlay.dataset.clickBound === "true") return;
+
+  overlay.dataset.clickBound = "true";
+
+  overlay.addEventListener("click", () => {
+    launchStudio();
+  });
+};
 
 const showMenu = () => {
   closeDialogue(true);
@@ -3015,7 +3054,6 @@ const gameLoop = time => {
   renderGame(time);
 };
 /* ---------- EVENT CONNECTION ---------- */
-
 const connectEvents = () => {
   document.addEventListener("gameaction", event => {
     handleAction(event.detail.action);
@@ -3025,30 +3063,38 @@ const connectEvents = () => {
     handleGuess(event.detail.letter);
   });
 
-  const hintButton = getElement("hintBtn");
-
-  if (hintButton && !hintButton.hasAttribute("data-act")) {
-    hintButton.addEventListener("click", useHint);
-  }
-
   document.addEventListener("click", event => {
+    const studioButton = event.target.closest(
+      "#studioIntroOverlay .studio-intro-launch"
+    );
+
+    if (studioButton) {
+      event.preventDefault();
+      handleAction("launchStudio");
+      return;
+    }
+
     const key = event.target.closest(".key, .keyboard-key");
 
     if (key && key.dataset.letter) {
       handleGuess(key.dataset.letter);
     }
   });
+
+  const hintButton = getElement("hintBtn");
+
+  if (hintButton && !hintButton.hasAttribute("data-act")) {
+    hintButton.addEventListener("click", useHint);
+  }
 };
-
-
 export const initializeGame = () => {
   game.boss.hp = BOSS.maxHP;
   game.boss.maxHP = BOSS.maxHP;
   game.boss.timeLeft = BOSS.timeLimit;
+
   setSoundEnabled(true);
   initializeCanvas();
   initializeProgression();
-  startMenuMusic()
   initializeInput();
 
   const menuArt = getElement("menuArt");
@@ -3058,10 +3104,9 @@ export const initializeGame = () => {
     poseHank(menuArt, 6, "cool");
   }
 
-game.settings = loadSettings() || {};
-game.bestScore = loadBestScore();
+  game.settings = loadSettings() || {};
+  game.bestScore = loadBestScore();
 
-setSoundEnabled(true);
   document.body.classList.toggle(
     "noscan",
     !game.settings.scan
@@ -3073,6 +3118,7 @@ setSoundEnabled(true);
   );
 
   connectEvents();
+  bindStudioIntro();
 
   const bestText = getElement("bestTxt");
 
@@ -3084,7 +3130,15 @@ setSoundEnabled(true);
   setVisible("hud2", false);
   setVisible("pauseBtn", false);
 
+  game.mode = "menu";
   showScreen("menu");
+
+  const overlay = getElement("studioIntroOverlay");
+
+  if (overlay) {
+    overlay.hidden = false;
+    overlay.classList.remove("is-closing");
+  }
 
   if (animationFrame) {
     cancelAnimationFrame(animationFrame);
@@ -3095,6 +3149,7 @@ setSoundEnabled(true);
 
   console.log("Game controller initialized.");
 };
+
 const bossDamageAnimation = () => {
   const boss = getElement("bossCharacter");
   const label = getElement("bossHitLabel");
