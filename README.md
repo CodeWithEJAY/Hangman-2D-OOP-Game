@@ -29,7 +29,7 @@ Built with a Java-powered backend and a browser-based frontend, the project comb
 
 | Main Menu | Gameplay |
 |:---:|:---:|
-| <img src="https://github.com/user-attachments/assets/a1b0ba74-8ab6-41c4-8db3-1185f21c2a20" width="400" alt="Main Menu"> | <img src="https://github.com/user-attachments/assets/5c6517a9-0dc5-4193-b43b-5f60ce9eb099" width="400" alt="Gameplay"> |
+| <img src="assets/screenshots/main-menu.png" width="400" alt="Main Menu"> | <img src="assets/screenshots/gameplay.png" width="400" alt="Gameplay"> |
 
 | Boss Fight | Victory |
 |:---:|:---:|
