@@ -844,7 +844,7 @@ const defeatBoss = () => {
   game.boss.active = false;
   game.boss.defeated = true;
   playBossDefeatSound();
-    playQuestCompleteSound();
+  playQuestCompleteSound();
 
 
   game.activeNPC = null;

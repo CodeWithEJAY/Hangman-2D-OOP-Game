@@ -101,46 +101,177 @@ button:focus-visible {
     right: 12px;
     z-index: 3;
     display: none;
-    padding: 1px 10px;
-    font-size: .8rem;
-    opacity: .9;
-    box-shadow: 0 3px 0 var(--navy);
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 2px solid #536486;
+    border-radius: 3px;
+    background: #172443;
+    color: #ffd166;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 3px 0 #080e20;
+    cursor: pointer;
+    transition: 0.15s ease;
 }
-.settings-options {
-    display: grid;
-    gap: 8px;
-    text-align: left;
+
+.pause-button:hover {
+    background: #ffd166;
+    color: #10182f;
 }
-.settings-options button {
-    display: flex;
-    justify-content: space-between;
+
+/* PAUSE MENU */
+
+#pause .pause-panel {
+    position: relative;
+    box-sizing: border-box;
+    width: min(85%, 340px);
+    padding: 30px 27px 17px;
+    overflow: hidden;
+    border: 2px solid #536486;
+    border-radius: 4px;
+    background: linear-gradient(
+        145deg,
+        #202e50,
+        #172443 65%,
+        #10182f
+    );
+    color: #f7f3e8;
+    text-align: center;
+    box-shadow:
+        0 5px 0 #080e20,
+        0 12px 25px rgba(0, 0, 0, 0.35);
+}
+
+#pause .pause-panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    font-size: clamp(.8rem, 2.4vw, 1rem);
+    height: 4px;
+    background: #ffd166;
 }
-.settings-options b {
-    color: #c9394a;
+
+#pause .pause-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 53px;
+    height: 53px;
+    margin: 0 auto 15px;
+    border: 1px solid rgba(255, 209, 102, 0.5);
+    border-radius: 4px;
+    background: rgba(255, 209, 102, 0.07);
 }
-.settings-options b.on {
-    color: #1a9d6b;
+
+#pause .pause-icon span {
+    width: 7px;
+    height: 23px;
+    background: #ffd166;
+    box-shadow: 2px 2px 0 #8c682b;
 }
-.reduce-motion *,
-.reduce-motion *::before {
-    animation: none !important;
+
+#pause .pause-panel h2 {
+    margin: 0;
+    color: #ffd166;
+    font-size: clamp(25px, 5vw, 31px);
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-shadow: 2px 2px 0 #72552b;
 }
-.hide-scanlines .scanline-overlay {
-    display: none;
+
+#pause .pause-panel > p {
+    margin: 10px 0 23px;
+    color: #aebbd4;
+    font-size: 12px;
+}
+
+#pause .pause-actions {
+    display: grid;
+    gap: 10px;
+}
+
+#pause .pause-actions button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    min-height: 42px;
+    padding: 11px;
+    border: 1px solid #536486;
+    border-radius: 3px;
+    background: #263655;
+    color: #dce5f2;
+    font: inherit;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    box-shadow: 0 3px 0 #080e20;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+#pause .pause-quit {
+    color: #aebbd4;
+}
+
+#pause .pause-quit:hover {
+    border-color: #91a4cb;
+    background: #344668;
+}
+
+#pause .pause-resume {
+    border-color: #d6a94e !important;
+    background: #ffd166 !important;
+    color: #172443 !important;
+    box-shadow: 0 3px 0 #89652c !important;
+}
+
+#pause .pause-resume:hover {
+    background: #ffe09a !important;
+    transform: translateY(-2px);
+}
+
+#pause .pause-actions button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 #080e20;
+}
+
+#pause .pause-footer {
+    margin-top: 21px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    color: #8495b4;
+    font-size: 9px;
+    letter-spacing: 1px;
+}
+
+#pause .pause-footer kbd {
+    padding: 3px 6px;
+    border: 1px solid #536486;
+    border-radius: 2px;
+    background: #10182f;
+    color: #ffd166;
+    font: inherit;
+    font-weight: bold;
+}
+
+#pause button:focus-visible,
+.pause-button:focus-visible {
+    outline: 2px solid #ffd166;
+    outline-offset: 3px;
 }
 
 @media (max-width: 520px) {
-    .tutorial-grid,
-    .tutorial-info-grid {
-        grid-template-columns: 1fr;
-    }
-    .tutorial-step {
-        flex-direction: column;
-        align-items: stretch;
+    #pause .pause-panel {
+        width: 88%;
+        padding: 25px 20px 15px;
     }
 }
+
 @media (pointer: coarse) {
     .touch-controls {
         display: flex;
