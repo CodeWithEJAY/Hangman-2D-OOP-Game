@@ -33,7 +33,7 @@ Built with a Java-powered backend and a browser-based frontend, the project comb
 
 | Boss Fight | Victory |
 |:---:|:---:|
-| <!-- Add Boss Fight screenshot URL here --> | <!-- Add Victory screenshot URL here --> |
+| <img src="assets/screenshots/boss-fight.png" width="400" alt="Boss Fight"> | <img src="assets/screenshots/victory.png" width="400" alt="Victory"> |
 
 ---
 
