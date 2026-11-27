@@ -68,9 +68,75 @@ const isTypingTarget = target => {
     target.isContentEditable
   );
 };
+
+const isIntroDialogueActive = () => {
+  return document.body.dataset.introDialogue === "true";
+};
+
+
+const finishIntroDialogue = () => {
+  closeDialogue(true);
+
+  delete document.body.dataset.introDialogue;
+
+  pressedKeys.clear();
+  updateInputState();
+
+  setVisible("pauseBtn", true);
+};
+
+const advanceIntroDialogue = () => {
+  if (!isIntroDialogueActive()) return;
+
+  const element = getElement("dlg");
+
+  if (!element || element.hidden) {
+    finishIntroDialogue();
+    return;
+  }
+
+  const textElement = element.querySelector(".txt");
+  const instruction = element.querySelector("i");
+
+  if (dialogue.typing) {
+    window.clearInterval(dialogue.typingTimer);
+
+    dialogue.typingTimer = null;
+    dialogue.typing = false;
+
+    textElement.textContent =
+      dialogue.messages[dialogue.messageIndex];
+
+    const lastMessage =
+      dialogue.messageIndex >= dialogue.messages.length - 1;
+
+    if (instruction) {
+      instruction.textContent = lastMessage
+        ? "E · CLOSE"
+        : "E · CONTINUE";
+    }
+
+    return;
+  }
+
+  if (dialogue.messageIndex < dialogue.messages.length - 1) {
+    dialogue.messageIndex++;
+
+    say(
+      element,
+      dialogue.messages[dialogue.messageIndex]
+    );
+
+    return;
+  }
+
+  finishIntroDialogue();
+};
+
 const handleKeyDown = event => {
   const key = event.key;
-    if (
+
+  if (
     key === "Escape" &&
     document.body.classList.contains("boss-fight-active")
   ) {
@@ -78,18 +144,30 @@ const handleKeyDown = event => {
     return;
   }
 
-  // this is here coz theres a switch case where specific key are binded to specifc action this to make the 
-  // to make all keyboard work if in quest
   if (isTypingTarget(event.target)) {
     return;
   }
-  if (inputMode === "guess" && /^[a-zA-Z]$/.test(key)) {
-  if (!event.repeat) {
-    dispatchLetter(key);
+
+  if (document.body.dataset.introDialogue === "true") {
+    event.preventDefault();
+
+    if (
+      !event.repeat &&
+      (key.toLowerCase() === "e" || key === "Enter")
+    ) {
+      dispatchAction("interact");
+    }
+
+    return;
   }
 
-  return;
-}
+  if (inputMode === "guess" && /^[a-zA-Z]$/.test(key)) {
+    if (!event.repeat) {
+      dispatchLetter(key);
+    }
+
+    return;
+  }
 
   if (
     key === "ArrowLeft" ||
@@ -148,7 +226,6 @@ const handleWindowBlur = () => {
   pressedKeys.clear();
   updateInputState();
 };
-
 const handlePointerDown = event => {
   const control = event.target.closest("[data-k]");
 
@@ -157,6 +234,14 @@ const handlePointerDown = event => {
   event.preventDefault();
 
   const direction = control.dataset.k;
+
+  if (document.body.dataset.introDialogue === "true") {
+    if (direction === "e") {
+      dispatchAction("interact");
+    }
+
+    return;
+  }
 
   if (direction === "e") {
     dispatchAction("interact");
@@ -193,6 +278,16 @@ const handlePointerUp = event => {
 };
 
 const handleButtonClick = event => {
+  if (isIntroDialogueActive()) {
+    const actionButton = event.target.closest("[data-act]");
+
+    if (actionButton?.dataset.act === "interact") {
+      advanceIntroDialogue();
+    }
+
+    return;
+  }
+
   const actionButton = event.target.closest("[data-act]");
 
   if (actionButton) {

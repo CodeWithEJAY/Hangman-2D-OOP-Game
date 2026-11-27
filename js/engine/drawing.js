@@ -1176,84 +1176,60 @@ const drawBossAtmosphere = (time, intensity = 0) => {
 
   ctx.save();
 
-  ctx.globalAlpha = strength * 0.16;
-  rc(0, 0, W, H, "#171124");
-
   if (bossX > -220 && bossX < W + 220) {
-    const pulse = 0.75 + Math.sin(time * 2.2) * 0.15;
+    const pulse = 0.7 + Math.sin(time * 1.8) * 0.12;
 
     const glow = ctx.createRadialGradient(
       bossX,
-      GY - 48,
+      GY - 70,
       8,
       bossX,
-      GY - 48,
-      190
+      GY - 70,
+      230
     );
 
     glow.addColorStop(
       0,
-      `rgba(126, 35, 61, ${0.24 * strength * pulse})`
+      `rgba(255, 220, 151, ${0.24 * strength * pulse})`
     );
 
     glow.addColorStop(
-      0.55,
-      `rgba(90, 29, 57, ${0.12 * strength})`
+      0.45,
+      `rgba(151, 199, 231, ${0.16 * strength})`
     );
 
-    glow.addColorStop(1, "rgba(50, 20, 48, 0)");
+    glow.addColorStop(1, "rgba(151, 199, 231, 0)");
 
     ctx.globalAlpha = 1;
     ctx.fillStyle = glow;
 
     ctx.fillRect(
-      bossX - 190,
-      GY - 220,
-      380,
-      220
+      bossX - 230,
+      GY - 300,
+      460,
+      300
     );
   }
 
-  ctx.globalAlpha = strength * 0.09;
+  for (let i = 0; i < 12; i++) {
+    const orbit = time * (0.35 + (i % 3) * 0.12) + i * 2.1;
 
-  for (let i = 0; i < 6; i++) {
-    const width = 55 + (i % 3) * 35;
+    const x = bossX + Math.cos(orbit) * (75 + (i % 4) * 24);
+    const y = GY - 60 - (i % 4) * 24 + Math.sin(orbit) * 12;
 
-    const x =
-      ((time * (9 + i * 2) + i * 137) %
-        (W + width)) - width;
+    if (x < -10 || x > W + 10) continue;
 
-    const y = GY - 94 + i * 13;
+    const alpha = strength * (
+      0.3 + (Math.sin(time * 1.5 + i) + 1) * 0.22
+    );
 
-    rc(x, y, width, 3, "#ad7185");
-  }
+    ctx.save();
+    ctx.globalAlpha = alpha;
 
-  const glitchWave = Math.sin(time * 4.8);
+    rc(x, y, 3, 3, "#fff0cf");
+    rc(x + 3, y - 2, 2, 2, "#ffd166");
 
-  if (glitchWave > 0.82) {
-    ctx.globalAlpha = strength * 0.18;
-
-    const lineY = Math.floor((time * 113) % H);
-
-    rc(0, lineY, W, 2, "#e65a73");
-  }
-
-  ctx.globalAlpha = strength * 0.28;
-
-  for (let i = 0; i < 13; i++) {
-    const speed = 12 + (i % 4) * 9;
-
-    const x = (
-      i * 127 + Math.floor(time * speed)
-    ) % W;
-
-    const y = 35 + (i * 43) % 190;
-
-    if (i % 3 === 0) {
-      rc(x, y, 5, 2, "#e65a73");
-    } else {
-      rc(x, y, 2, 2, "#b9a3c9");
-    }
+    ctx.restore();
   }
 
   ctx.restore();
@@ -1771,34 +1747,102 @@ const drawNPCDecorations = (
     drawPumpkin(5015);
   };
 
-  const drawBossRuins = () => {
-    const intensity = Math.max(night, bossAwakening);
-    const darkStone = blendColor("#55516d", "#24243f", intensity);
-    const purpleStone = blendColor("#786184", "#392a50", intensity);
-    const crystal = blendColor("#a75b86", "#613254", intensity);
+ const drawBossRuins = () => {
+  const x = place(5090);
 
-    [5100, 5360].forEach((worldX, index) => {
-      const x = place(worldX);
-      const height = index === 0 ? 62 : 82;
+  const oldStone = blendColor("#b5c5d4", "#707b99", night);
+  const stoneLight = blendColor("#d5dfdf", "#929bb2", night);
+  const stoneShade = blendColor("#91a6bb", "#555e7d", night);
 
-      rc(x, GY - height, 24, height, darkStone);
-      rc(x + 4, GY - height + 5, 16, height - 5, purpleStone);
-      rc(x - 2, GY - height - 4, 28, 7, darkStone);
+  const goldTrim = blendColor("#e7c77d", "#aa946f", night);
+  const banner = blendColor("#78b5dc", "#607eab", night);
+  const bannerLight = blendColor("#b8dff0", "#8498bc", night);
 
-      rc(x + 7, GY - 21, 3, 11, crystal);
-      rc(x + 14, GY - 35, 4, 14, crystal);
+  const ivy = blendColor("#5b9f57", "#456d56", night);
+  const flower = blendColor("#f3a6c3", "#ba91ac", night);
 
-      rc(x + 7, GY - height + 17, 3, 12, stone);
-      rc(x + 12, GY - height + 29, 4, 8, stone);
-    });
+  const drawPillar = pillarX => {
+    rc(pillarX + 3, GY - 5, 25, 5, stoneShade);
 
-    const x = place(5165);
+    rc(pillarX + 5, GY - 91, 20, 86, oldStone);
+    rc(pillarX + 8, GY - 88, 13, 80, stoneLight);
 
-    rc(x, GY - 5, 45, 5, darkStone);
-    rc(x + 5, GY - 16, 8, 12, purpleStone);
-    rc(x + 14, GY - 24, 8, 20, crystal);
-    rc(x + 26, GY - 13, 9, 9, purpleStone);
+    rc(pillarX + 2, GY - 98, 26, 10, stoneShade);
+    rc(pillarX + 4, GY - 100, 22, 5, stoneLight);
+    rc(pillarX + 7, GY - 96, 16, 2, goldTrim);
+
+    rc(pillarX + 7, GY - 76, 3, 21, stoneShade);
+    rc(pillarX + 17, GY - 62, 3, 13, stoneShade);
+
+    rc(pillarX + 4, GY - 15, 23, 3, stoneLight);
+
+    rc(pillarX + 1, GY - 4, 29, 4, oldStone);
+    rc(pillarX + 4, GY - 6, 23, 3, stoneLight);
+
+    rc(pillarX + 1, GY - 31, 4, 16, ivy);
+    rc(pillarX + 5, GY - 42, 5, 5, ivy);
+    rc(pillarX + 3, GY - 48, 4, 5, greenLight);
+
+    rc(pillarX + 20, GY - 23, 4, 3, flower);
+    rc(pillarX + 18, GY - 26, 3, 3, flower);
+    rc(pillarX + 22, GY - 27, 3, 3, "#ffd166");
   };
+
+  drawPillar(x);
+  drawPillar(x + 280);
+
+  rc(x + 23, GY - 109, 257, 10, stoneShade);
+  rc(x + 27, GY - 111, 249, 8, oldStone);
+  rc(x + 33, GY - 108, 237, 3, stoneLight);
+
+  rc(x + 31, GY - 101, 241, 5, oldStone);
+  rc(x + 36, GY - 99, 231, 2, goldTrim);
+
+  for (let i = 0; i < 6; i++) {
+    const tileX = x + 48 + i * 35;
+
+    rc(tileX, GY - 115, 18, 5, stoneLight);
+    rc(tileX + 4, GY - 119, 10, 5, oldStone);
+  }
+
+  rc(x + 134, GY - 127, 17, 17, stoneShade);
+  rc(x + 137, GY - 130, 11, 16, goldTrim);
+  rc(x + 140, GY - 127, 5, 10, bannerLight);
+  rc(x + 139, GY - 124, 7, 3, "#fff0cf");
+
+  const drawBanner = bannerX => {
+    rc(bannerX, GY - 91, 3, 29, goldTrim);
+    rc(bannerX - 2, GY - 92, 7, 3, goldTrim);
+
+    rc(bannerX + 3, GY - 87, 15, 17, banner);
+    rc(bannerX + 3, GY - 70, 7, 7, banner);
+    rc(bannerX + 10, GY - 70, 4, 4, banner);
+
+    rc(bannerX + 6, GY - 83, 3, 3, bannerLight);
+    rc(bannerX + 10, GY - 78, 3, 3, goldTrim);
+  };
+
+  drawBanner(x + 41);
+  drawBanner(x + 247);
+
+  const drawGardenFlowers = gardenX => {
+    const sx = place(gardenX);
+
+    for (let i = 0; i < 3; i++) {
+      const flowerX = sx + i * 10;
+
+      rc(flowerX, GY - 7, 2, 7, ivy);
+      rc(flowerX - 2, GY - 10, 6, 5, flower);
+      rc(flowerX, GY - 12, 3, 3, "#ffd166");
+    }
+  };
+
+  drawGardenFlowers(5070);
+  drawGardenFlowers(5390);
+
+  rc(place(5208), GY - 4, 22, 4, stoneShade);
+  rc(place(5212), GY - 7, 14, 4, stoneLight);
+};
 
   drawLuigiDetails();
   drawBirdPerch();
