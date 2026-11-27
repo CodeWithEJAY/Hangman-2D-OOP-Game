@@ -153,6 +153,7 @@ const showMenu = () => {
   if (bestText) {
     bestText.textContent = pad(game.bestScore, 6);
   }
+  startMenuMusic();
 };
 
 const completedNPCNames = new Set();
@@ -1863,7 +1864,7 @@ const completeQuest = () => {
     window.setTimeout(() => {
       if (game.boss.unlocked && !game.boss.defeated) {
         showToast(
-          "THE HANGMAN KING HAS APPEARED! GO TO THE END OF THE MAP!"
+          "SOMEONE MYSTERIOUS APPEARED! GO TO THE END OF THE MAP!"
         );
       }
     }, 2300);
@@ -2514,6 +2515,11 @@ const endGame = victory => {
   }
 
   showScreen("end");
+  if (victory) {
+  playQuestComplete();
+} else {
+  playGameOverSound();
+}
 
   stopGameMusic();
   stopBossMusic();
@@ -2550,6 +2556,7 @@ const returnToCreditsMenu = () => {
 let creditsWatchFrame = null;
 const startCredits = () => {
   if (game.mode !== "end" || !game.boss.defeated) return;
+  startGameMusic();
 
   const roll = getElement("creditsRoll");
   const finale = getElement("creditsFinale");
@@ -2570,7 +2577,6 @@ const startCredits = () => {
 
   game.mode = "credits";
 
-  stopGameMusic();
   stopBossMusic();
 
   setVisible("hud", false);
@@ -2626,6 +2632,7 @@ const startCredits = () => {
 };
 const finishCredits = () => {
   if (game.mode !== "credits") return;
+  stopGameMusic();
 
   if (creditsWatchFrame !== null) {
     cancelAnimationFrame(creditsWatchFrame);
