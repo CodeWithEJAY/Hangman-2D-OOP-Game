@@ -58,6 +58,8 @@
                 </div>
             </div>
 
+
+
             <!-- Quest and health HUD -->
             <div class="hud-bottom" id="hud2">
                 <div>
@@ -231,26 +233,42 @@
             <!-- ==============================
                  PAUSE MENU
             =============================== -->
+<section id="pause" class="screen-view">
+    <div class="content-panel pause-panel" role="dialog" aria-labelledby="pauseH">
 
-            <section id="pause" class="screen-view ">
-                <div class="content-panel" role="dialog" aria-labelledby="pauseH">
-                    <h2 id="pauseH">PAUSED</h2>
+        <div class="pause-icon">
+            <span></span>
+            <span></span>
+        </div>
 
-                    <p class="tutorial-tip">
-                        Are you sure you want to quit?. Your progress will be restarted!
-                    </p>
+        <h2 id="pauseH">PAUSED</h2>
 
-                    <div class="content-panel-buttons">
-                        <button class="panel-action-button" data-act="quit">
-                            QUIT
-                        </button>
+        <p>Take a breather, Hank.</p>
 
-                        <button class="panel-action-button primary" data-act="resume">
-                            RESUME
-                        </button>
-                    </div>
-                </div>
-            </section>
+        <div class="pause-actions">
+            <button
+                type="button"
+                class="pause-quit"
+                data-act="quit"
+            >
+                QUIT TO TITLE
+            </button>
+
+            <button
+                type="button"
+                class="pause-resume"
+                data-act="resume"
+            >
+                <span>▶</span> RESUME
+            </button>
+        </div>
+
+        <div class="pause-footer">
+            PRESS <kbd>ESC</kbd> TO RESUME
+        </div>
+
+    </div>
+</section>
 
             <!-- ==============================
                  HOW TO PLAY

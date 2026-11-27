@@ -153,6 +153,7 @@ const showMenu = () => {
   if (bestText) {
     bestText.textContent = pad(game.bestScore, 6);
   }
+  startMenuMusic();
 };
 
 const completedNPCNames = new Set();
@@ -420,7 +421,7 @@ const renderInventoryHUD = () => {
 
   const inventory = game.inventory || [];
 
-  hud.hidden = game.mode !== "play" || inventory.length === 0;
+  hud.hidden = game.mode !== "play";
 
   if (hud.hidden) {
     inventoryExpanded = false;
@@ -449,7 +450,7 @@ const renderInventoryHUD = () => {
 
   const count = document.createElement("span");
   count.className = "inventory-count";
-  count.textContent = inventory.length;
+  count.textContent = items.length;
 
   toggle.append(icon, label, count);
   hud.appendChild(toggle);
@@ -510,7 +511,10 @@ const renderInventoryHUD = () => {
   const grid = document.createElement("div");
   grid.className = "bag-modal-grid";
 
-  const slotCount = Math.max(12, Math.ceil(items.length / 4) * 4);
+  const slotCount = Math.max(
+    12,
+    Math.ceil(items.length / 4) * 4
+  );
 
   for (let i = 0; i < slotCount; i++) {
     const entry = items[i];
@@ -544,7 +548,9 @@ const renderInventoryHUD = () => {
   footer.className = "bag-modal-footer";
 
   const itemCount = document.createElement("span");
-  itemCount.textContent = `${items.length} ITEMS COLLECTED`;
+  itemCount.textContent = items.length === 0
+    ? "NO ITEMS COLLECTED"
+    : `${items.length} ITEMS COLLECTED`;
 
   const closeHint = document.createElement("span");
   closeHint.textContent = "ESC TO CLOSE";
@@ -590,7 +596,6 @@ const renderInventoryHUD = () => {
 
   closeButton.focus();
 };
-
 
 const showLeaderboard = async () => {
   closeDialogue(true);
@@ -844,7 +849,7 @@ const defeatBoss = () => {
   game.boss.active = false;
   game.boss.defeated = true;
   playBossDefeatSound();
-    playQuestCompleteSound();
+  playQuestCompleteSound();
 
 
   game.activeNPC = null;
@@ -917,6 +922,7 @@ const pad = (number, length = 2) => {
   return String(Math.max(0, Math.round(number))).padStart(length, "0");
 };
 
+
 const updateHUD = () => {
   const progress = getQuestProgress();
   const seconds = Math.floor(game.elapsedTime);
@@ -937,10 +943,46 @@ const updateHUD = () => {
     }
   });
 
+  const trackerTitle = getElement("questTrackerTitle");
+  const trackerObjective = getElement("questTrackerObjective");
+  const trackerCount = getElement("questTrackerCount");
   const bar = getElement("bar");
 
+  if (game.boss.unlocked) {
+    if (trackerTitle) {
+      trackerTitle.textContent = "DEFEAT THE HANGMAN KING";
+    }
+
+    if (trackerObjective) {
+      trackerObjective.textContent = game.mode === "boss"
+        ? "Solve the King's words before time runs out."
+        : game.boss.defeated
+          ? "The village is safe. Your adventure is complete."
+          : "All villagers are free. Reach the end of the map.";
+    }
+  } else {
+    if (trackerTitle) {
+      trackerTitle.textContent = "FREE THE VILLAGERS";
+    }
+
+    if (trackerObjective) {
+      trackerObjective.textContent =
+        "Help the villagers and restore the town.";
+    }
+  }
+
+  if (trackerCount) {
+    trackerCount.textContent =
+      `${progress.completed}/${progress.total}`;
+  }
+
   if (bar) {
-    bar.innerHTML = "";
+    bar.replaceChildren();
+
+    bar.setAttribute(
+      "aria-label",
+      `${progress.completed} of ${progress.total} villagers helped`
+    );
 
     for (let i = 0; i < progress.total; i++) {
       const segment = document.createElement("i");
@@ -952,7 +994,133 @@ const updateHUD = () => {
       bar.appendChild(segment);
     }
   }
-};
+
+  const questLog = getElement("questLog");
+
+  if (questLog) {
+    const completedSignature = NPCS
+      .map(npc => completedNPCNames.has(npc.name) ? "1" : "0")
+      .join("");
+
+    const activeName = game.activeNPC?.name || "";
+
+    const bossStatus = game.boss.defeated
+      ? "complete"
+      : game.boss.unlocked
+        ? game.mode === "boss" ? "active" : "pending"
+        : "hidden";
+
+    const signature = [
+      completedSignature,
+      activeName,
+      bossStatus
+    ].join("|");
+
+    if (questLog.dataset.signature !== signature) {
+      const heading = document.createElement("div");
+      heading.className = "quest-log-heading";
+
+      const headingTitle = document.createElement("span");
+      headingTitle.className = "quest-log-heading-title";
+      headingTitle.textContent = "QUEST LOG";
+
+      const headingCount = document.createElement("span");
+      headingCount.className = "quest-log-heading-count";
+      headingCount.textContent =
+        `${progress.completed}/${progress.total}`;
+
+      heading.append(headingTitle, headingCount);
+
+      const list = document.createElement("div");
+      list.className = "quest-log-list";
+
+      NPCS.forEach(npc => {
+        const completed = completedNPCNames.has(npc.name);
+        const active = !completed && activeName === npc.name;
+
+        const entry = document.createElement("div");
+        entry.className = "quest-log-entry";
+
+        if (completed) {
+          entry.classList.add("is-complete");
+        } else if (active) {
+          entry.classList.add("is-active");
+        }
+
+        const icon = document.createElement("span");
+        icon.className = "quest-log-icon";
+        icon.textContent = completed ? "✓" : active ? "●" : "○";
+
+        const info = document.createElement("div");
+        info.className = "quest-log-info";
+
+        const name = document.createElement("span");
+        name.className = "quest-log-name";
+        name.textContent = npc.name.toUpperCase();
+
+        const goal = document.createElement("span");
+        goal.className = "quest-log-goal";
+        goal.textContent = npc.goal;
+
+        const status = document.createElement("span");
+        status.className = "quest-log-status";
+        status.textContent = completed
+          ? "DONE"
+          : active
+            ? "ACTIVE"
+            : "OPEN";
+
+        info.append(name, goal);
+        entry.append(icon, info, status);
+        list.appendChild(entry);
+      });
+
+      if (game.boss.unlocked) {
+        const entry = document.createElement("div");
+        entry.className = "quest-log-entry";
+
+        const completed = game.boss.defeated;
+        const active = !completed && game.mode === "boss";
+
+        if (completed) {
+          entry.classList.add("is-complete");
+        } else if (active) {
+          entry.classList.add("is-active");
+        }
+
+        const icon = document.createElement("span");
+        icon.className = "quest-log-icon";
+        icon.textContent = completed ? "✓" : active ? "●" : "○";
+
+        const info = document.createElement("div");
+        info.className = "quest-log-info";
+
+        const name = document.createElement("span");
+        name.className = "quest-log-name";
+        name.textContent = "THE HANGMAN KING";
+
+        const goal = document.createElement("span");
+        goal.className = "quest-log-goal";
+        goal.textContent = "Defeat the Hangman King";
+
+        const status = document.createElement("span");
+        status.className = "quest-log-status";
+        status.textContent = completed
+          ? "DONE"
+          : active
+            ? "ACTIVE"
+            : "OPEN";
+
+        info.append(name, goal);
+        entry.append(icon, info, status);
+        list.appendChild(entry);
+      }
+
+      questLog.replaceChildren(heading, list);
+      questLog.dataset.signature = signature;
+    }
+  }
+}
 
 const showToast = message => {
   const toast = getElement("toast");
@@ -1696,7 +1864,7 @@ const completeQuest = () => {
     window.setTimeout(() => {
       if (game.boss.unlocked && !game.boss.defeated) {
         showToast(
-          "THE HANGMAN KING HAS APPEARED! GO TO THE END OF THE MAP!"
+          "SOMEONE MYSTERIOUS APPEARED! GO TO THE END OF THE MAP!"
         );
       }
     }, 2300);
@@ -2033,17 +2201,107 @@ const startTutorial = () => {
 
     showScreen("tut");
 };
+
+let openingTransitionTimers = [];
+let openingTransitionOverlay = null;
+
+const clearOpeningTransition = () => {
+  openingTransitionTimers.forEach(timer => {
+    window.clearTimeout(timer);
+  });
+
+  openingTransitionTimers = [];
+
+  if (openingTransitionOverlay) {
+    openingTransitionOverlay.remove();
+    openingTransitionOverlay = null;
+  }
+
+  const canvas = document.querySelector("canvas");
+
+  if (canvas) {
+    canvas.classList.remove("opening-screen-shake");
+  }
+
+  delete document.body.dataset.introDialogue;
+  delete document.body.dataset.introDialogueReady;
+};
+
+const startOpeningSequence = () => {
+  clearOpeningTransition();
+
+  const canvas = document.querySelector("canvas");
+
+  const overlay = document.createElement("div");
+  overlay.className = "opening-transition";
+
+  document.body.appendChild(overlay);
+
+  openingTransitionOverlay = overlay;
+
+  document.body.dataset.introDialogue = "true";
+
+  openingTransitionTimers.push(
+    window.setTimeout(() => {
+      overlay.classList.add("is-flashing");
+
+      if (canvas) {
+        canvas.classList.remove("opening-screen-shake");
+        canvas.classList.add("opening-screen-shake");
+      }
+    }, 260)
+  );
+
+  openingTransitionTimers.push(
+    window.setTimeout(() => {
+      overlay.classList.add("is-revealing");
+    }, 490)
+  );
+
+  openingTransitionTimers.push(
+    window.setTimeout(() => {
+      if (openingTransitionOverlay === overlay) {
+        overlay.remove();
+        openingTransitionOverlay = null;
+      }
+
+      if (canvas) {
+        canvas.classList.remove("opening-screen-shake");
+      }
+
+      openingTransitionTimers = [];
+
+      openDialogue(
+        { name: "HANK" },
+        [
+        "I've been on the road for a long time. Seen plenty of towns and strange places along the way.",
+        "But that light in the woods caught my eye. Figured I'd take a closer look.",
+        "Then it flashed... and the woods were gone. Now there's a town here I don't recognize.",
+        "Someone around here might know what happened. Guess there's only one way to find out."
+        ],
+        "close"
+      );
+
+      document.body.dataset.introDialogueReady = "true";
+    }, 2400)
+  );
+};
+
 const startNewGame = () => {
+  clearOpeningTransition();
   window.clearTimeout(questFinishTimer);
 
   document.body.classList.remove("boss-fight-active");
 
   // Randomize NPC positions before starting the new game.
-  randomizeNPCPositions();
+  // randomizeNPCPositions();
 
   initializeProgression();
 
   game.player = createPlayer();
+  game.player.vx = 0;
+  game.player.vy = 0;
+
   game.coinPickups = createCoins();
 
   game.score = INITIAL_SCORE;
@@ -2094,7 +2352,8 @@ const startNewGame = () => {
   updateCamera(game.player);
   updateHUD();
 
-  console.log("New game started with randomized NPC positions.");
+  startOpeningSequence();
+  
 };
 
 const pauseGame = () => {
@@ -2112,10 +2371,6 @@ const endGame = victory => {
 
   document.body.classList.remove("boss-fight-active");
 
-  if (!victory) {
-    playGameOverSound();
-  }
-
   game.mode = "end";
 
   stopBossMusic();
@@ -2124,7 +2379,7 @@ const endGame = victory => {
   game.boss.timer = null;
   game.boss.active = false;
 
-  closeDialogue();
+  closeDialogue(true);
 
   const levelScore = game.score + game.candies * 10;
 
@@ -2243,6 +2498,14 @@ const endGame = victory => {
           >
             TRY AGAIN
           </button>
+
+          <button
+            class="result-button result-menu-button"
+            type="button"
+            id="resultMenu"
+          >
+            MAIN MENU
+          </button>
         `}
       </div>
 
@@ -2250,12 +2513,29 @@ const endGame = victory => {
   `;
 
   if (victory) {
-    getElement("resultContinue").addEventListener("click", startCredits);
+    getElement("resultContinue").addEventListener(
+      "click",
+      startCredits
+    );
   } else {
-    getElement("resultRetry").addEventListener("click", startNewGame);
+    getElement("resultRetry").addEventListener(
+      "click",
+      startNewGame
+    );
+
+    getElement("resultMenu").addEventListener(
+      "click",
+      showMenu
+    );
   }
 
   showScreen("end");
+
+  if (victory) {
+    playQuestComplete();
+  } else {
+    playGameOverSound();
+  }
 
   stopGameMusic();
   stopBossMusic();
@@ -2292,6 +2572,7 @@ const returnToCreditsMenu = () => {
 let creditsWatchFrame = null;
 const startCredits = () => {
   if (game.mode !== "end" || !game.boss.defeated) return;
+  startGameMusic();
 
   const roll = getElement("creditsRoll");
   const finale = getElement("creditsFinale");
@@ -2312,7 +2593,6 @@ const startCredits = () => {
 
   game.mode = "credits";
 
-  stopGameMusic();
   stopBossMusic();
 
   setVisible("hud", false);
@@ -2368,6 +2648,7 @@ const startCredits = () => {
 };
 const finishCredits = () => {
   if (game.mode !== "credits") return;
+  stopGameMusic();
 
   if (creditsWatchFrame !== null) {
     cancelAnimationFrame(creditsWatchFrame);
@@ -2390,6 +2671,50 @@ const finishCredits = () => {
   if (finale) {
     finale.hidden = false;
   }
+};
+const isIntroDialogueActive = () => {
+  return document.body.dataset.introDialogue === "true";
+};
+
+const finishIntroDialogue = () => {
+  closeDialogue(true);
+
+  delete document.body.dataset.introDialogue;
+  delete document.body.dataset.introDialogueReady;
+
+  setVisible("pauseBtn", true);
+};
+
+const advanceIntroDialogue = () => {
+  if (!isIntroDialogueActive()) return;
+
+  if (document.body.dataset.introDialogueReady !== "true") {
+    return;
+  }
+
+  const element = getElement("dlg");
+
+  if (!element || element.hidden) {
+    finishIntroDialogue();
+    return;
+  }
+
+  if (dialogue.typing) {
+    return;
+  }
+
+  if (dialogue.messageIndex < dialogue.messages.length - 1) {
+    dialogue.messageIndex++;
+
+    say(
+      element,
+      dialogue.messages[dialogue.messageIndex]
+    );
+
+    return;
+  }
+
+  finishIntroDialogue();
 };
 /* ---------- ACTIONS ---------- */
 const handleAction = action => {
@@ -2417,6 +2742,14 @@ const handleAction = action => {
   }
 
   unlockAudio();
+
+  if (isIntroDialogueActive()) {
+    if (action === "interact") {
+      advanceIntroDialogue();
+    }
+
+    return;
+  }
 
   switch (action) {
     case "start":
@@ -2539,7 +2872,6 @@ const handleAction = action => {
       break;
   }
 };
-
 /* ---------- UPDATE AND DRAW ---------- */
 
 const updateGame = deltaTime => {

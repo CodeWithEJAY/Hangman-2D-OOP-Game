@@ -1,3 +1,4 @@
+
 import { ctx, camera } from "./canvas.js";
 
 import {
@@ -323,71 +324,205 @@ const drawBuildings = (night = 0, sunset = 0, sunrise = 0) => {
   }
 };
 
+const TREE_PLACEMENTS = [
+  { x: 20, scale: 0.92, type: 2 },
+  { x: 360, scale: 0.92, type: 0 },
+  { x: 820, scale: 1.05, type: 1 },
+  { x: 1280, scale: 0.88, type: 2 },
+  { x: 1800, scale: 1.08, type: 0 },
+  { x: 2050, scale: 0.85, type: 1 },
+  { x: 2500, scale: 1.02, type: 2 },
+  { x: 3170, scale: 1.08, type: 0 },
+  { x: 3830, scale: 0.92, type: 1 },
+  { x: 4480, scale: 1.05, type: 2 }
+];
+
+const BUSH_PLACEMENTS = [
+  { x: 50, scale: 0.78, type: 0 },
+  { x: 10, scale: 0.78, type: 1 },
+  { x: 330, scale: 0.78, type: 0 },
+  { x: 425, scale: 1.05, type: 1 },
+  { x: 790, scale: 0.90, type: 1 },
+  { x: 870, scale: 0.72, type: 0 },
+  { x: 1235, scale: 0.80, type: 0 },
+  { x: 1310, scale: 1.12, type: 1 },
+  { x: 1760, scale: 1.05, type: 1 },
+  { x: 1840, scale: 0.70, type: 0 },
+  { x: 2010, scale: 0.72, type: 0 },
+  { x: 2090, scale: 0.80, type: 1 },
+  { x: 2460, scale: 0.85, type: 1 },
+  { x: 2550, scale: 1.05, type: 0 },
+  { x: 3130, scale: 0.90, type: 0 },
+  { x: 3220, scale: 0.78, type: 1 },
+  { x: 3790, scale: 0.75, type: 1 },
+  { x: 3880, scale: 1.00, type: 0 },
+  { x: 4440, scale: 0.82, type: 0 },
+  { x: 4530, scale: 1.10, type: 1 }
+];
+
+const FLOWER_PATCHES = [
+  { x: 285, count: 3, color: 0 },
+  { x: 760, count: 3, color: 1 },
+  { x: 1180, count: 3, color: 2 },
+  { x: 1700, count: 2, color: 0 },
+  { x: 2390, count: 3, color: 1 },
+  { x: 2780, count: 2, color: 2 },
+  { x: 3090, count: 3, color: 0 },
+  { x: 3740, count: 3, color: 1 },
+  { x: 4390, count: 3, color: 2 },
+  { x: 4960, count: 2, color: 0 }
+];
+
 const drawTrees = (night = 0) => {
   const trunk = blendColor("#7a4a2b", "#57404a", night);
   const trunkHighlight = blendColor("#a76a3c", "#765568", night);
-  const leafDark = blendColor("#328638", "#24483c", night);
+
+  const leafDark = blendColor("#287537", "#24483c", night);
   const leafMid = blendColor("#3f9f3a", "#315b43", night);
-  const leafLight = blendColor("#4fae3a", "#42734a", night);
-  const leafHighlight = blendColor("#7be05a", "#72996a", night);
+  const leafLight = blendColor("#58b847", "#42734a", night);
+  const leafHighlight = blendColor("#8be05a", "#72996a", night);
 
-  for (let i = 0; i < 22; i++) {
-    const sx = px(250 + i * 520);
+  const shadow = blendColor("#4c743d", "#293d3c", night);
 
-    if (sx < -120 || sx > W + 120) continue;
+  TREE_PLACEMENTS.forEach(tree => {
+    const sx = px(tree.x);
 
-    rc(sx + 20, GY - 60, 10, 60, trunk);
-    rc(sx + 22, GY - 58, 3, 55, trunkHighlight);
+    if (sx < -120 || sx > W + 120) return;
 
-    rc(sx - 4, GY - 92, 58, 34, leafDark);
-    rc(sx - 4, GY - 92, 58, 31, leafMid);
+    ctx.save();
+    ctx.translate(sx, GY);
+    ctx.scale(tree.scale, tree.scale);
 
-    rc(sx + 6, GY - 116, 38, 28, leafLight);
-    rc(sx + 10, GY - 110, 12, 6, leafHighlight);
-    rc(sx + 30, GY - 105, 7, 4, leafHighlight);
+    rc(12, -3, 42, 4, shadow);
 
-    rc(sx + 2, GY - 84, 7, 5, leafHighlight);
-    rc(sx + 25, GY - 94, 4, 3, leafDark);
-    rc(sx + 42, GY - 88, 5, 3, leafDark);
-    rc(sx + 17, GY - 79, 4, 3, leafDark);
-  }
+    rc(23, -66, 12, 66, trunk);
+    rc(26, -64, 3, 61, trunkHighlight);
+
+    rc(17, -64, 11, 9, trunk);
+    rc(32, -76, 14, 8, trunk);
+
+    if (tree.type === 0) {
+      rc(2, -94, 58, 34, leafDark);
+      rc(7, -108, 48, 34, leafMid);
+      rc(14, -121, 35, 27, leafLight);
+
+      rc(12, -113, 13, 6, leafHighlight);
+      rc(33, -116, 11, 5, leafHighlight);
+
+      rc(1, -86, 12, 8, leafMid);
+      rc(48, -91, 12, 9, leafDark);
+      rc(24, -100, 5, 4, leafDark);
+    }
+
+    if (tree.type === 1) {
+      rc(25, -132, 10, 21, leafDark);
+
+      rc(18, -117, 25, 22, leafMid);
+      rc(11, -100, 39, 23, leafDark);
+      rc(4, -81, 53, 21, leafMid);
+
+      rc(21, -126, 7, 7, leafHighlight);
+      rc(17, -110, 9, 5, leafHighlight);
+      rc(34, -96, 8, 5, leafHighlight);
+      rc(12, -78, 12, 5, leafLight);
+    }
+
+    if (tree.type === 2) {
+      rc(2, -96, 58, 36, leafDark);
+      rc(7, -112, 48, 32, leafMid);
+      rc(16, -127, 30, 26, leafLight);
+
+      rc(-2, -89, 15, 15, leafMid);
+      rc(47, -91, 15, 15, leafDark);
+
+      rc(14, -119, 12, 6, leafHighlight);
+      rc(36, -111, 10, 5, leafHighlight);
+      rc(5, -96, 9, 5, leafHighlight);
+      rc(45, -99, 7, 5, leafMid);
+    }
+
+    ctx.restore();
+  });
 };
 
 const drawBushes = (night = 0) => {
-  const base = blendColor("#4fae3a", "#315c42", night);
   const dark = blendColor("#328638", "#24483c", night);
+  const base = blendColor("#4fae3a", "#315c42", night);
   const light = blendColor("#5cc247", "#497b4d", night);
   const highlight = blendColor("#8be05a", "#72996a", night);
 
-  for (let i = 0; i < 40; i++) {
-    const sx = px(80 + i * 190);
+  BUSH_PLACEMENTS.forEach(bush => {
+    const sx = px(bush.x);
 
-    if (sx < -60 || sx > W + 60 || i % 3 === 2) continue;
+    if (sx < -70 || sx > W + 70) return;
 
-    rc(sx, GY - 14, 36, 14, dark);
-    rc(sx + 2, GY - 14, 32, 12, base);
-    rc(sx + 6, GY - 22, 24, 10, light);
-    rc(sx + 10, GY - 20, 6, 4, highlight);
-    rc(sx + 23, GY - 17, 5, 3, dark);
-    rc(sx + 2, GY - 9, 6, 4, dark);
-  }
+    ctx.save();
+    ctx.translate(sx, GY);
+    ctx.scale(bush.scale, bush.scale);
+
+    rc(-2, -3, 45, 4, dark);
+
+    if (bush.type === 0) {
+      rc(1, -11, 17, 12, dark);
+      rc(6, -18, 20, 16, base);
+      rc(20, -14, 20, 13, dark);
+      rc(25, -19, 15, 13, light);
+
+      rc(10, -16, 8, 4, highlight);
+      rc(28, -17, 6, 3, highlight);
+      rc(2, -9, 7, 3, base);
+    }
+
+    if (bush.type === 1) {
+      rc(0, -10, 43, 10, dark);
+
+      rc(5, -17, 17, 14, base);
+      rc(15, -22, 19, 17, light);
+      rc(28, -16, 17, 13, base);
+
+      rc(10, -16, 7, 4, highlight);
+      rc(23, -20, 7, 4, highlight);
+      rc(35, -13, 5, 3, light);
+    }
+
+    ctx.restore();
+  });
 };
 
 const drawFlowers = (night = 0) => {
   const stem = blendColor("#3f9f3a", "#315441", night);
+  const leaf = blendColor("#69c441", "#315b43", night);
 
-  for (let i = 0; i < 62; i++) {
-    const sx = px(60 + i * 97);
+  const palettes = [
+    ["#ff9ac1", "#ffd166"],
+    ["#fff0cf", "#ff9ac1"],
+    ["#c5a5ff", "#ffd166"]
+  ];
 
-    if (sx < -10 || sx > W + 10 || i % 4) continue;
+  FLOWER_PATCHES.forEach(patch => {
+    for (let i = 0; i < patch.count; i++) {
+      const flowerX = px(patch.x + i * 11);
 
-    const color = i % 8 ? "#ff9ac1" : "#ffd166";
+      if (flowerX < -12 || flowerX > W + 12) continue;
 
-    rc(sx, GY - 12, 2, 12, stem);
-    rc(sx, GY - 17, 2, 3, color);
-    rc(sx - 3, GY - 16, 8, 6, color);
-    rc(sx, GY - 15, 2, 2, "#fff");
-  }
+      const flowerColor = palettes[patch.color][
+        i % palettes[patch.color].length
+      ];
+
+      const flowerY = GY - 15 - (i % 2) * 3;
+
+      rc(flowerX, GY - 10, 2, 10, stem);
+      rc(flowerX - 4, GY - 7, 5, 2, leaf);
+      rc(flowerX + 2, GY - 5, 5, 2, leaf);
+
+      rc(flowerX - 3, flowerY + 2, 3, 3, flowerColor);
+      rc(flowerX + 2, flowerY + 2, 3, 3, flowerColor);
+      rc(flowerX, flowerY - 1, 3, 3, flowerColor);
+      rc(flowerX, flowerY + 5, 3, 2, flowerColor);
+
+      rc(flowerX, flowerY + 2, 3, 3, "#ffd166");
+    }
+  });
 };
 
 const drawGround = (night = 0) => {
@@ -442,25 +577,34 @@ const drawGround = (night = 0) => {
 };
 
 const drawGrassDetails = (night = 0) => {
-  const grass = blendColor("#3f9f3a", "#315441", night);
-  const light = blendColor("#8be05a", "#72996a", night);
+  const grass = blendColor("#4b9c42", "#315b47", night);
+  const light = blendColor("#8bdc61", "#72996a", night);
 
-  for (let i = 0; i < 90; i++) {
-    const sx = px(i * 31 + 13);
+  const firstSection = Math.floor(camera.x / 78);
+
+  for (
+    let i = firstSection - 1;
+    i <= firstSection + Math.ceil(W / 78) + 1;
+    i++
+  ) {
+    const worldX = i * 78 + 24;
+    const sx = px(worldX);
 
     if (sx < -10 || sx > W + 10) continue;
 
+    const height = i % 3 === 0 ? 4 : 3;
+
+    rc(sx, GY - height, 2, height, grass);
+
+    if (i % 2 === 0) {
+      rc(sx + 3, GY - 4, 2, 4, light);
+    }
+
     if (i % 4 === 0) {
-      rc(sx, GY - 5, 2, 5, grass);
-      rc(sx + 3, GY - 4, 2, 4, grass);
-      rc(sx + 1, GY - 7, 2, 2, light);
-    } else if (i % 4 === 1) {
-      rc(sx, GY - 3, 2, 3, light);
+      rc(sx + 6, GY - 2, 2, 2, grass);
     }
   }
 };
-
-/* ---------- STREET LIGHTS ---------- */
 
 const drawStreetLights = (
   night = 0,
@@ -540,33 +684,33 @@ const drawStreetLights = (
   }
 };
 
-/* ---------- AMBIENT ENVIRONMENT EFFECTS ---------- */
-
 const drawBreezeGrass = (time, night = 0) => {
-  const dark = blendColor("#328638", "#24483c", night);
-  const mid = blendColor("#4fae3a", "#315b43", night);
+  const dark = blendColor("#46983d", "#315441", night);
+  const mid = blendColor("#62b94b", "#477b52", night);
   const light = blendColor("#8be05a", "#72996a", night);
+
+  const firstSection = Math.floor(camera.x / 145);
 
   ctx.save();
 
-  for (let i = 0; i < 72; i++) {
-    const worldX = i * 37 + 17;
+  for (
+    let i = firstSection - 1;
+    i <= firstSection + Math.ceil(W / 145) + 1;
+    i++
+  ) {
+    const worldX = i * 145 + 65;
     const sx = px(worldX);
 
     if (sx < -15 || sx > W + 15) continue;
 
-    const sway = Math.sin(time * 1.4 + i * 0.85);
-    const secondSway = Math.sin(time * 1.1 + i * 1.3);
+    const sway = Math.sin(time * 1.3 + i * 1.7);
+    const lean = Math.round(sway * 1.5);
 
-    const lean = Math.round(sway * 3);
-    const baseY = GY;
+    rc(sx, GY - 4, 2, 4, dark);
+    rc(sx + 3 + lean, GY - 6, 2, 6, mid);
 
-    rc(sx, baseY - 5, 2, 5, dark);
-    rc(sx + 3 + lean, baseY - 8 + Math.round(secondSway), 2, 8, mid);
-    rc(sx + 6 + lean, baseY - 4, 2, 4, light);
-
-    if (i % 3 === 0) {
-      rc(sx + 2 + lean, baseY - 10 + Math.round(secondSway), 2, 2, light);
+    if (i % 2 === 0) {
+      rc(sx + 6 + lean, GY - 3, 2, 3, light);
     }
   }
 
@@ -858,8 +1002,6 @@ const drawNightBats = (
   ctx.restore();
 };
 
-/* ---------- PLATFORM DECORATIONS ---------- */
-
 const drawPlatformFlowers = (sx, y, w, index, night) => {
   const stem = blendColor("#3f9f3a", "#315441", night);
   const leaf = blendColor("#69c441", "#315b43", night);
@@ -896,6 +1038,7 @@ const drawPlatformFlowers = (sx, y, w, index, night) => {
     rc(flowerX, flowerY + 2, 3, 3, "#ffd166");
   }
 };
+
 const drawPlatformGrassTufts = (sx, y, w, night) => {
   const dark = blendColor("#328638", "#24483c", night);
   const mid = blendColor("#4fae3a", "#315b43", night);
@@ -918,7 +1061,6 @@ const drawPlatformGrassTufts = (sx, y, w, night) => {
     }
   });
 };
-
 
 const drawPlatformDecorations = (night = 0) => {
   PLATS.forEach((platform, index) => {
@@ -1029,8 +1171,6 @@ const drawCoins = (coins, time) => {
   });
 };
 
-/* ---------- BOSS ARRIVAL ATMOSPHERE ---------- */
-
 const drawBossAtmosphere = (time, intensity = 0) => {
   if (intensity <= 0) return;
 
@@ -1039,88 +1179,65 @@ const drawBossAtmosphere = (time, intensity = 0) => {
 
   ctx.save();
 
-  ctx.globalAlpha = strength * 0.16;
-  rc(0, 0, W, H, "#171124");
-
   if (bossX > -220 && bossX < W + 220) {
-    const pulse = 0.75 + Math.sin(time * 2.2) * 0.15;
+    const pulse = 0.7 + Math.sin(time * 1.8) * 0.12;
 
     const glow = ctx.createRadialGradient(
       bossX,
-      GY - 48,
+      GY - 70,
       8,
       bossX,
-      GY - 48,
-      190
+      GY - 70,
+      230
     );
 
     glow.addColorStop(
       0,
-      `rgba(126, 35, 61, ${0.24 * strength * pulse})`
+      `rgba(255, 220, 151, ${0.24 * strength * pulse})`
     );
 
     glow.addColorStop(
-      0.55,
-      `rgba(90, 29, 57, ${0.12 * strength})`
+      0.45,
+      `rgba(151, 199, 231, ${0.16 * strength})`
     );
 
-    glow.addColorStop(1, "rgba(50, 20, 48, 0)");
+    glow.addColorStop(1, "rgba(151, 199, 231, 0)");
 
     ctx.globalAlpha = 1;
     ctx.fillStyle = glow;
 
     ctx.fillRect(
-      bossX - 190,
-      GY - 220,
-      380,
-      220
+      bossX - 230,
+      GY - 300,
+      460,
+      300
     );
   }
 
-  ctx.globalAlpha = strength * 0.09;
+  for (let i = 0; i < 12; i++) {
+    const orbit = time * (0.35 + (i % 3) * 0.12) + i * 2.1;
 
-  for (let i = 0; i < 6; i++) {
-    const width = 55 + (i % 3) * 35;
+    const x = bossX + Math.cos(orbit) * (75 + (i % 4) * 24);
+    const y = GY - 60 - (i % 4) * 24 + Math.sin(orbit) * 12;
 
-    const x =
-      ((time * (9 + i * 2) + i * 137) %
-        (W + width)) - width;
+    if (x < -10 || x > W + 10) continue;
 
-    const y = GY - 94 + i * 13;
+    const alpha = strength * (
+      0.3 + (Math.sin(time * 1.5 + i) + 1) * 0.22
+    );
 
-    rc(x, y, width, 3, "#ad7185");
-  }
+    ctx.save();
+    ctx.globalAlpha = alpha;
 
-  const glitchWave = Math.sin(time * 4.8);
+    rc(x, y, 3, 3, "#fff0cf");
+    rc(x + 3, y - 2, 2, 2, "#ffd166");
 
-  if (glitchWave > 0.82) {
-    ctx.globalAlpha = strength * 0.18;
-
-    const lineY = Math.floor((time * 113) % H);
-
-    rc(0, lineY, W, 2, "#e65a73");
-  }
-
-  ctx.globalAlpha = strength * 0.28;
-
-  for (let i = 0; i < 13; i++) {
-    const speed = 12 + (i % 4) * 9;
-
-    const x = (
-      i * 127 + Math.floor(time * speed)
-    ) % W;
-
-    const y = 35 + (i * 43) % 190;
-
-    if (i % 3 === 0) {
-      rc(x, y, 5, 2, "#e65a73");
-    } else {
-      rc(x, y, 2, 2, "#b9a3c9");
-    }
+    ctx.restore();
   }
 
   ctx.restore();
 };
+
 const drawTownBanner = (night = 0) => {
   const x = px(100);
   const y = GY;
@@ -1188,6 +1305,569 @@ const drawTownBanner = (night = 0) => {
   rc(x + 158, y - 128, 3, 8, woodLight);
 };
 
+
+const drawNPCDecorations = (
+  night = 0,
+  time = 0,
+  bossAwakening = 0
+) => {
+  const wood = blendColor("#a87950", "#66546a", night);
+  const woodLight = blendColor("#c39463", "#81708a", night);
+  const woodDark = blendColor("#76503a", "#51445c", night);
+
+  const green = blendColor("#4fae3a", "#315b43", night);
+  const greenLight = blendColor("#8be05a", "#72996a", night);
+
+  const gold = blendColor("#ffd166", "#bda16f", night);
+  const cream = blendColor("#f5e8c5", "#b3a6ad", night);
+
+  const stone = blendColor("#8994a8", "#51516e", night);
+  const stoneLight = blendColor("#b3c0d5", "#77708c", night);
+
+  const place = x => px(x);
+
+  const drawCrate = (worldX, width = 25, height = 19) => {
+    const x = place(worldX);
+
+    rc(x, GY - height + 2, width, height - 2, wood);
+    rc(x + 2, GY - height, width - 4, 3, woodLight);
+    rc(x + 4, GY - height + 5, width - 8, 2, woodDark);
+    rc(x + 5, GY - height + 8, 2, height - 12, woodLight);
+    rc(x + width - 7, GY - height + 8, 2, height - 12, woodLight);
+  };
+
+  const drawBarrel = worldX => {
+    const x = place(worldX);
+
+    rc(x + 3, GY - 22, 20, 21, woodDark);
+    rc(x + 5, GY - 21, 16, 18, wood);
+    rc(x + 7, GY - 21, 3, 18, woodLight);
+    rc(x + 5, GY - 17, 16, 3, woodLight);
+    rc(x + 5, GY - 7, 16, 3, woodLight);
+    rc(x + 14, GY - 19, 4, 13, woodDark);
+  };
+
+  const drawPawPrint = (worldX, yOffset = 0) => {
+    const x = place(worldX);
+    const color = blendColor("#956c52", "#66536a", night);
+
+    rc(x + 2, GY - 8 + yOffset, 4, 4, color);
+    rc(x - 1, GY - 13 + yOffset, 3, 3, color);
+    rc(x + 3, GY - 15 + yOffset, 3, 3, color);
+    rc(x + 7, GY - 13 + yOffset, 3, 3, color);
+    rc(x + 10, GY - 9 + yOffset, 3, 3, color);
+  };
+
+  const drawPotion = (worldX, color) => {
+    const x = place(worldX);
+    const liquid = blendColor(color, "#51496d", night * 0.35);
+
+    rc(x + 3, GY - 24, 7, 3, woodDark);
+    rc(x + 4, GY - 22, 5, 5, "#c5b89d");
+    rc(x + 2, GY - 17, 9, 11, stone);
+    rc(x + 4, GY - 15, 5, 8, liquid);
+    rc(x + 4, GY - 20, 5, 3, cream);
+    rc(x + 6, GY - 14, 2, 3, "#fff0cf");
+  };
+
+  const drawCrystal = (worldX, height, color, phase = 0) => {
+    const x = place(worldX);
+    const pulse = 0.55 + Math.sin(time * 2 + phase) * 0.2;
+
+    const crystalColor = blendColor(
+      color,
+      "#55516d",
+      night * 0.3
+    );
+
+    ctx.save();
+    ctx.globalAlpha = 0.13 + pulse * 0.11;
+
+    const glow = ctx.createRadialGradient(
+      x + 7,
+      GY - height / 2,
+      2,
+      x + 7,
+      GY - height / 2,
+      height * 0.65
+    );
+
+    glow.addColorStop(0, color);
+    glow.addColorStop(1, "rgba(100, 80, 180, 0)");
+
+    ctx.fillStyle = glow;
+    ctx.fillRect(
+      x - height / 2,
+      GY - height,
+      height * 1.5,
+      height
+    );
+
+    ctx.restore();
+
+    rc(x + 5, GY - height, 7, height, crystalColor);
+    rc(x + 2, GY - height + 9, 4, height - 14, crystalColor);
+    rc(x + 5, GY - height, 7, 9, color);
+    rc(x + 8, GY - height + 5, 4, height - 12, color);
+    rc(x + 5, GY - height + 10, 2, 5, "#e8dafa");
+  };
+
+  const drawLuigiDetails = () => {
+    drawPawPrint(530);
+    drawPawPrint(550, -5);
+
+    const x = place(515);
+
+    rc(x, GY - 7, 21, 7, stone);
+    rc(x + 3, GY - 11, 15, 5, stoneLight);
+    rc(x + 5, GY - 9, 4, 2, cream);
+    rc(x + 9, GY - 8, 3, 2, "#c8d2dc");
+  };
+
+  const drawBirdPerch = () => {
+    const x = place(970);
+
+    rc(x + 17, GY - 54, 5, 54, woodDark);
+    rc(x + 19, GY - 51, 2, 49, woodLight);
+
+    rc(x - 2, GY - 49, 44, 4, woodDark);
+    rc(x + 1, GY - 48, 38, 2, woodLight);
+
+    rc(x + 24, GY - 55, 17, 7, wood);
+    rc(x + 26, GY - 59, 12, 5, woodLight);
+
+    rc(x + 6, GY - 41, 12, 9, "#e3b85c");
+    rc(x + 8, GY - 39, 8, 5, "#f8d57f");
+
+    rc(x + 5, GY - 53, 8, 8, "#6e9cce");
+    rc(x + 6, GY - 57, 6, 5, "#7fc8ff");
+    rc(x + 12, GY - 52, 4, 3, "#ffd166");
+    rc(x + 8, GY - 51, 2, 2, "#fff");
+  };
+
+  const drawCandyStand = () => {
+    const x = place(1450);
+
+    rc(x, GY - 29, 52, 5, woodDark);
+    rc(x + 3, GY - 27, 46, 3, woodLight);
+
+    rc(x + 5, GY - 24, 5, 24, wood);
+    rc(x + 42, GY - 24, 5, 24, wood);
+
+    const jars = [
+      { x: 8, color: "#ff6f9c" },
+      { x: 22, color: "#5fe0b0" },
+      { x: 36, color: "#ffd166" }
+    ];
+
+    jars.forEach(jar => {
+      rc(x + jar.x, GY - 43, 10, 13, stone);
+      rc(x + jar.x + 2, GY - 41, 6, 9, jar.color);
+      rc(x + jar.x + 3, GY - 45, 4, 3, cream);
+      rc(x + jar.x + 3, GY - 39, 2, 2, "#fff");
+    });
+
+    rc(x + 16, GY - 54, 22, 3, woodDark);
+    rc(x + 18, GY - 52, 18, 2, "#ff9ac1");
+    rc(x + 24, GY - 59, 6, 8, "#ffd166");
+    rc(x + 22, GY - 61, 10, 3, "#ff9ac1");
+  };
+
+  const drawBeehive = () => {
+    const x = place(2135);
+
+    rc(x + 3, GY - 3, 37, 3, woodDark);
+    rc(x + 11, GY - 30, 23, 30, "#d7a653");
+    rc(x + 8, GY - 25, 29, 8, "#e6b65f");
+    rc(x + 11, GY - 18, 23, 8, "#bd8545");
+    rc(x + 14, GY - 11, 17, 8, "#e5b45c");
+
+    rc(x + 9, GY - 31, 27, 4, wood);
+    rc(x + 16, GY - 37, 13, 7, "#e6b65f");
+    rc(x + 20, GY - 41, 5, 5, "#d59c4f");
+
+    rc(x + 20, GY - 8, 5, 4, woodDark);
+    rc(x + 3, GY - 2, 36, 2, woodLight);
+
+    rc(x + 45, GY - 2, 15, 2, wood);
+    rc(x + 46, GY - 9, 12, 8, "#dca75e");
+  };
+
+  const drawBeeSwarm = () => {
+    const beeColor = blendColor("#ffd166", "#c9a66d", night);
+
+    [
+      [2200, 86],
+      [2217, 72],
+      [2250, 92],
+      [2185, 65]
+    ].forEach(([worldX, y], index) => {
+      const x = place(worldX) + Math.sin(time * 2 + index) * 3;
+      const bob = Math.sin(time * 3 + index * 2) * 2;
+
+      rc(x, y + bob, 5, 3, beeColor);
+      rc(x + 5, y + bob, 2, 3, woodDark);
+      rc(x + 1, y - 2 + bob, 3, 2, "#eff4ed");
+    });
+  };
+
+  const drawRobotWorkbench = () => {
+    const x = place(2805);
+
+    rc(x, GY - 27, 66, 6, woodDark);
+    rc(x + 3, GY - 25, 60, 3, woodLight);
+
+    rc(x + 5, GY - 21, 6, 21, wood);
+    rc(x + 55, GY - 21, 6, 21, wood);
+
+    rc(x + 12, GY - 40, 18, 12, stone);
+    rc(x + 14, GY - 38, 14, 8, stoneLight);
+    rc(x + 17, GY - 35, 3, 3, "#5fe0b0");
+    rc(x + 23, GY - 35, 3, 3, "#7fc8ff");
+
+    rc(x + 37, GY - 39, 17, 11, wood);
+    rc(x + 39, GY - 37, 13, 7, "#bdc9d9");
+    rc(x + 42, GY - 35, 7, 3, "#667b98");
+
+    rc(x + 4, GY - 31, 5, 4, "#ffd166");
+    rc(x + 60, GY - 35, 8, 3, "#7fc8ff");
+  };
+
+  const drawGear = worldX => {
+    const x = place(worldX);
+
+    rc(x + 4, GY - 15, 12, 12, "#b8c4d6");
+    rc(x + 1, GY - 11, 18, 4, "#b8c4d6");
+    rc(x + 8, GY - 18, 4, 18, "#b8c4d6");
+
+    rc(x + 7, GY - 12, 6, 6, "#536486");
+    rc(x + 9, GY - 10, 2, 2, "#ffd166");
+  };
+
+  const drawFishingProps = () => {
+    const x = place(3450);
+
+    drawCrate(3450, 27, 19);
+    drawBarrel(3490);
+
+    rc(x + 36, GY - 27, 13, 5, stone);
+    rc(x + 38, GY - 25, 9, 3, "#7fc8ff");
+    rc(x + 40, GY - 30, 4, 4, cream);
+
+    rc(x + 52, GY - 59, 3, 3, woodDark);
+    rc(x + 53, GY - 62, 3, 5, wood);
+    rc(x + 54, GY - 67, 3, 6, woodLight);
+    rc(x + 56, GY - 72, 3, 6, woodLight);
+    rc(x + 58, GY - 75, 3, 5, woodDark);
+
+    rc(x + 59, GY - 70, 1, 39, "#c8d9e8");
+    rc(x + 57, GY - 31, 4, 2, "#ffd166");
+    rc(x + 57, GY - 29, 2, 5, "#c8d9e8");
+
+    rc(x + 62, GY - 9, 8, 3, "#7fc8ff");
+    rc(x + 68, GY - 11, 4, 2, "#b9e8f7");
+  };
+
+ const drawWizardDecor = () => {
+  const x = place(4055);
+
+  const purple = blendColor("#a78acb", "#6b6389", night);
+  const purpleLight = blendColor("#d1b5ed", "#9183aa", night);
+  const blue = blendColor("#7fc8df", "#527c9a", night);
+
+  const mushroom = blendColor("#b28bd5", "#77658d", night);
+
+  const tableY = GY - 27;
+
+  rc(x + 5, tableY, 68, 4, wood);
+  rc(x + 8, tableY + 3, 4, 24, woodDark);
+  rc(x + 65, tableY + 3, 4, 24, woodDark);
+  rc(x + 9, tableY + 4, 2, 21, woodLight);
+  rc(x + 66, tableY + 4, 2, 21, woodLight);
+
+  rc(x + 14, GY - 31, 48, 4, purple);
+  rc(x + 17, GY - 32, 41, 2, purpleLight);
+
+  rc(x + 18, GY - 37, 17, 6, woodDark);
+  rc(x + 20, GY - 36, 13, 4, cream);
+  rc(x + 22, GY - 36, 8, 2, purple);
+
+  rc(x + 42, GY - 40, 13, 9, woodLight);
+  rc(x + 44, GY - 38, 9, 5, "#8f76b6");
+  rc(x + 46, GY - 37, 5, 2, "#e9d7f5");
+
+  rc(x + 8, GY - 43, 4, 12, woodDark);
+  rc(x + 5, GY - 45, 10, 3, woodLight);
+
+  rc(x + 6, GY - 51, 3, 7, green);
+  rc(x + 10, GY - 54, 3, 10, greenLight);
+  rc(x + 13, GY - 49, 3, 6, green);
+
+  rc(x + 6, GY - 55, 3, 3, "#d0a8e5");
+  rc(x + 10, GY - 58, 3, 3, "#d0a8e5");
+
+  const drawHerbPot = (potX, color) => {
+    rc(potX + 3, GY - 13, 14, 12, woodDark);
+    rc(potX + 5, GY - 12, 10, 9, color);
+    rc(potX + 4, GY - 14, 12, 3, woodLight);
+
+    rc(potX + 9, GY - 22, 2, 9, green);
+    rc(potX + 5, GY - 21, 5, 3, greenLight);
+    rc(potX + 11, GY - 25, 6, 4, green);
+    rc(potX + 7, GY - 27, 4, 4, greenLight);
+  };
+
+  drawHerbPot(4070, "#b47b68");
+  drawHerbPot(4130, "#8d78a9");
+
+  const drawMushroom = (mushX, size, color) => {
+    const mushroomX = place(mushX);
+
+    rc(mushroomX + 4, GY - size, 5, size - 3, cream);
+    rc(mushroomX, GY - size - 4, 13, 5, color);
+    rc(mushroomX + 2, GY - size - 7, 8, 4, color);
+
+    rc(mushroomX + 3, GY - size - 3, 2, 2, "#fff0cf");
+    rc(mushroomX + 9, GY - size - 5, 2, 2, "#fff0cf");
+  };
+
+  drawMushroom(4140, 15, mushroom);
+  drawMushroom(4160, 11, blue);
+  drawMushroom(4120, 9, "#cf9bc7");
+
+  rc(x + 83, GY - 5, 3, 5, green);
+  rc(x + 79, GY - 12, 7, 8, purple);
+  rc(x + 77, GY - 14, 11, 4, purpleLight);
+  rc(x + 81, GY - 18, 4, 5, "#e9d7f5");
+
+  const sparklePositions = [
+    [4095, GY - 76],
+    [4120, GY - 91],
+    [4150, GY - 68],
+    [4108, GY - 62]
+  ];
+
+  sparklePositions.forEach(([worldX, y], index) => {
+    const sparkleX = place(worldX);
+    const pulse = Math.sin(time * 2.2 + index * 1.7);
+    const size = pulse > 0.25 ? 3 : 2;
+
+    ctx.save();
+    ctx.globalAlpha = 0.55 + (pulse + 1) * 0.18;
+
+    rc(sparkleX, y, size, size, "#fff0cf");
+
+    if (size === 3) {
+      rc(sparkleX - 2, y + 1, 2, 1, purpleLight);
+      rc(sparkleX + 3, y + 1, 2, 1, purpleLight);
+    }
+
+    ctx.restore();
+  });
+};
+
+  const drawPumpkin = worldX => {
+    const x = place(worldX);
+
+    const orange = blendColor("#e99b45", "#a97962", night);
+    const orangeLight = blendColor("#f4ba65", "#bd9670", night);
+
+    rc(x + 3, GY - 15, 18, 13, orange);
+    rc(x, GY - 12, 24, 9, orange);
+    rc(x + 5, GY - 18, 14, 5, orangeLight);
+
+    rc(x + 8, GY - 14, 3, 10, orangeLight);
+    rc(x + 14, GY - 14, 3, 10, wood);
+    rc(x + 11, GY - 20, 3, 5, green);
+
+    rc(x + 5, GY - 8, 3, 3, "#f6ca7b");
+  };
+
+  const drawCropPatch = worldX => {
+    const x = place(worldX);
+
+    rc(x, GY - 2, 49, 2, woodDark);
+
+    for (let i = 0; i < 3; i++) {
+      const cropX = x + 5 + i * 15;
+
+      rc(cropX, GY - 13, 2, 13, green);
+
+      rc(cropX - 4, GY - 13, 5, 4, greenLight);
+      rc(cropX + 2, GY - 18, 5, 4, greenLight);
+
+      rc(cropX, GY - 20, 3, 3, gold);
+      rc(cropX - 2, GY - 23, 3, 3, gold);
+    }
+  };
+
+  const drawWateringCan = worldX => {
+    const x = place(worldX);
+
+    const can = blendColor("#7fc8d8", "#526b82", night);
+    const highlight = blendColor("#b9e8ed", "#8099a5", night);
+
+    rc(x + 4, GY - 17, 19, 13, can);
+    rc(x + 7, GY - 20, 13, 4, highlight);
+    rc(x + 8, GY - 13, 12, 7, can);
+
+    rc(x + 19, GY - 14, 12, 3, can);
+    rc(x + 28, GY - 17, 5, 6, highlight);
+
+    rc(x + 5, GY - 17, 3, 8, highlight);
+
+    rc(x + 2, GY - 15, 5, 3, can);
+    rc(x + 1, GY - 12, 3, 7, can);
+  };
+
+  const drawHarvestBasket = worldX => {
+    const x = place(worldX);
+
+    rc(x + 2, GY - 14, 26, 13, wood);
+    rc(x + 4, GY - 12, 22, 9, woodLight);
+
+    rc(x + 4, GY - 17, 7, 7, "#e99b45");
+    rc(x + 12, GY - 20, 7, 10, "#e99b45");
+    rc(x + 20, GY - 16, 6, 6, "#d98c49");
+
+    rc(x + 5, GY - 19, 3, 4, green);
+    rc(x + 13, GY - 22, 3, 4, greenLight);
+    rc(x + 21, GY - 18, 3, 4, green);
+  };
+
+  const drawFarmerDecor = () => {
+    drawHarvestBasket(4680);
+    drawPumpkin(4715);
+    drawPumpkin(4745);
+
+    drawCropPatch(4780);
+    drawCropPatch(4835);
+
+    drawWateringCan(4895);
+    drawBarrel(4940);
+
+    drawCrate(4980, 30, 19);
+    drawPumpkin(5015);
+  };
+
+ const drawBossRuins = () => {
+  const x = place(5090);
+
+  const oldStone = blendColor("#b5c5d4", "#707b99", night);
+  const stoneLight = blendColor("#d5dfdf", "#929bb2", night);
+  const stoneShade = blendColor("#91a6bb", "#555e7d", night);
+
+  const goldTrim = blendColor("#e7c77d", "#aa946f", night);
+  const banner = blendColor("#78b5dc", "#607eab", night);
+  const bannerLight = blendColor("#b8dff0", "#8498bc", night);
+
+  const ivy = blendColor("#5b9f57", "#456d56", night);
+  const flower = blendColor("#f3a6c3", "#ba91ac", night);
+
+  const drawPillar = pillarX => {
+    rc(pillarX + 3, GY - 5, 25, 5, stoneShade);
+
+    rc(pillarX + 5, GY - 91, 20, 86, oldStone);
+    rc(pillarX + 8, GY - 88, 13, 80, stoneLight);
+
+    rc(pillarX + 2, GY - 98, 26, 10, stoneShade);
+    rc(pillarX + 4, GY - 100, 22, 5, stoneLight);
+    rc(pillarX + 7, GY - 96, 16, 2, goldTrim);
+
+    rc(pillarX + 7, GY - 76, 3, 21, stoneShade);
+    rc(pillarX + 17, GY - 62, 3, 13, stoneShade);
+
+    rc(pillarX + 4, GY - 15, 23, 3, stoneLight);
+
+    rc(pillarX + 1, GY - 4, 29, 4, oldStone);
+    rc(pillarX + 4, GY - 6, 23, 3, stoneLight);
+
+    rc(pillarX + 1, GY - 31, 4, 16, ivy);
+    rc(pillarX + 5, GY - 42, 5, 5, ivy);
+    rc(pillarX + 3, GY - 48, 4, 5, greenLight);
+
+    rc(pillarX + 20, GY - 23, 4, 3, flower);
+    rc(pillarX + 18, GY - 26, 3, 3, flower);
+    rc(pillarX + 22, GY - 27, 3, 3, "#ffd166");
+  };
+
+  drawPillar(x);
+  drawPillar(x + 280);
+
+  rc(x + 23, GY - 109, 257, 10, stoneShade);
+  rc(x + 27, GY - 111, 249, 8, oldStone);
+  rc(x + 33, GY - 108, 237, 3, stoneLight);
+
+  rc(x + 31, GY - 101, 241, 5, oldStone);
+  rc(x + 36, GY - 99, 231, 2, goldTrim);
+
+  for (let i = 0; i < 6; i++) {
+    const tileX = x + 48 + i * 35;
+
+    rc(tileX, GY - 115, 18, 5, stoneLight);
+    rc(tileX + 4, GY - 119, 10, 5, oldStone);
+  }
+
+  rc(x + 134, GY - 127, 17, 17, stoneShade);
+  rc(x + 137, GY - 130, 11, 16, goldTrim);
+  rc(x + 140, GY - 127, 5, 10, bannerLight);
+  rc(x + 139, GY - 124, 7, 3, "#fff0cf");
+
+  const drawBanner = bannerX => {
+    rc(bannerX, GY - 91, 3, 29, goldTrim);
+    rc(bannerX - 2, GY - 92, 7, 3, goldTrim);
+
+    rc(bannerX + 3, GY - 87, 15, 17, banner);
+    rc(bannerX + 3, GY - 70, 7, 7, banner);
+    rc(bannerX + 10, GY - 70, 4, 4, banner);
+
+    rc(bannerX + 6, GY - 83, 3, 3, bannerLight);
+    rc(bannerX + 10, GY - 78, 3, 3, goldTrim);
+  };
+
+  drawBanner(x + 41);
+  drawBanner(x + 247);
+
+  const drawGardenFlowers = gardenX => {
+    const sx = place(gardenX);
+
+    for (let i = 0; i < 3; i++) {
+      const flowerX = sx + i * 10;
+
+      rc(flowerX, GY - 7, 2, 7, ivy);
+      rc(flowerX - 2, GY - 10, 6, 5, flower);
+      rc(flowerX, GY - 12, 3, 3, "#ffd166");
+    }
+  };
+
+  drawGardenFlowers(5070);
+  drawGardenFlowers(5390);
+
+  rc(place(5208), GY - 4, 22, 4, stoneShade);
+  rc(place(5212), GY - 7, 14, 4, stoneLight);
+};
+
+  drawLuigiDetails();
+  drawBirdPerch();
+  drawCandyStand();
+
+  drawBeehive();
+  drawBeeSwarm();
+
+  drawRobotWorkbench();
+  drawGear(2785);
+  drawGear(2875);
+
+  drawFishingProps();
+
+  drawWizardDecor();
+  drawFarmerDecor();
+
+  drawBossRuins();
+};
+
+
+
 export const drawEnvironment = ({
   coins = [],
   time = 0,
@@ -1230,7 +1910,15 @@ export const drawEnvironment = ({
   drawTrees(currentNight);
   drawBushes(currentNight);
   drawFlowers(currentNight);
+
   drawGround(currentNight);
+
+  drawNPCDecorations(
+    currentNight,
+    time,
+    bossAwakening
+  );
+
   drawTownBanner(currentNight);
   drawGrassDetails(currentNight);
 
@@ -1286,4 +1974,4 @@ export const drawEnvironment = ({
   );
 
   ctx.textAlign = "left";
-};
+}; 
