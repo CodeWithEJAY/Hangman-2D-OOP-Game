@@ -1,4 +1,3 @@
-
 # HANK'S LAST STAND
 ### A 2D Quest-Driven Hangman Adventure
 
