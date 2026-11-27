@@ -325,6 +325,7 @@ const drawBuildings = (night = 0, sunset = 0, sunrise = 0) => {
 };
 
 const TREE_PLACEMENTS = [
+  { x: 20, scale: 0.92, type: 2 },
   { x: 360, scale: 0.92, type: 0 },
   { x: 820, scale: 1.05, type: 1 },
   { x: 1280, scale: 0.88, type: 2 },
@@ -337,6 +338,8 @@ const TREE_PLACEMENTS = [
 ];
 
 const BUSH_PLACEMENTS = [
+  { x: 50, scale: 0.78, type: 0 },
+  { x: 10, scale: 0.78, type: 1 },
   { x: 330, scale: 0.78, type: 0 },
   { x: 425, scale: 1.05, type: 1 },
   { x: 790, scale: 0.90, type: 1 },
