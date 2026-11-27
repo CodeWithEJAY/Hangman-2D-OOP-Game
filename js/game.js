@@ -2200,7 +2200,94 @@ const startTutorial = () => {
 
     showScreen("tut");
 };
+
+let openingTransitionTimers = [];
+let openingTransitionOverlay = null;
+
+const clearOpeningTransition = () => {
+  openingTransitionTimers.forEach(timer => {
+    window.clearTimeout(timer);
+  });
+
+  openingTransitionTimers = [];
+
+  if (openingTransitionOverlay) {
+    openingTransitionOverlay.remove();
+    openingTransitionOverlay = null;
+  }
+
+  const canvas = document.querySelector("canvas");
+
+  if (canvas) {
+    canvas.classList.remove("opening-screen-shake");
+  }
+
+  delete document.body.dataset.introDialogue;
+  delete document.body.dataset.introDialogueReady;
+};
+
+const startOpeningSequence = () => {
+  clearOpeningTransition();
+
+  const canvas = document.querySelector("canvas");
+
+  const overlay = document.createElement("div");
+  overlay.className = "opening-transition";
+
+  document.body.appendChild(overlay);
+
+  openingTransitionOverlay = overlay;
+
+  document.body.dataset.introDialogue = "true";
+
+  openingTransitionTimers.push(
+    window.setTimeout(() => {
+      overlay.classList.add("is-flashing");
+
+      if (canvas) {
+        canvas.classList.remove("opening-screen-shake");
+        canvas.classList.add("opening-screen-shake");
+      }
+    }, 260)
+  );
+
+  openingTransitionTimers.push(
+    window.setTimeout(() => {
+      overlay.classList.add("is-revealing");
+    }, 490)
+  );
+
+  openingTransitionTimers.push(
+    window.setTimeout(() => {
+      if (openingTransitionOverlay === overlay) {
+        overlay.remove();
+        openingTransitionOverlay = null;
+      }
+
+      if (canvas) {
+        canvas.classList.remove("opening-screen-shake");
+      }
+
+      openingTransitionTimers = [];
+
+      openDialogue(
+        { name: "HANK" },
+        [
+        "I've been on the road for a long time. Seen plenty of towns and strange places along the way.",
+        "But that light in the woods caught my eye. Figured I'd take a closer look.",
+        "Then it flashed... and the woods were gone. Now there's a town here I don't recognize.",
+        "Someone around here might know what happened. Guess there's only one way to find out."
+        ],
+        "close"
+      );
+
+      document.body.dataset.introDialogueReady = "true";
+    }, 2400)
+  );
+};
+
 const startNewGame = () => {
+  clearOpeningTransition();
   window.clearTimeout(questFinishTimer);
 
   document.body.classList.remove("boss-fight-active");
@@ -2211,6 +2298,9 @@ const startNewGame = () => {
   initializeProgression();
 
   game.player = createPlayer();
+  game.player.vx = 0;
+  game.player.vy = 0;
+
   game.coinPickups = createCoins();
 
   game.score = INITIAL_SCORE;
@@ -2261,7 +2351,8 @@ const startNewGame = () => {
   updateCamera(game.player);
   updateHUD();
 
-  console.log("New game started with randomized NPC positions.");
+  startOpeningSequence();
+  
 };
 
 const pauseGame = () => {
@@ -2558,6 +2649,70 @@ const finishCredits = () => {
     finale.hidden = false;
   }
 };
+const isIntroDialogueActive = () => {
+  return document.body.dataset.introDialogue === "true";
+};
+
+const finishIntroDialogue = () => {
+  closeDialogue(true);
+
+  delete document.body.dataset.introDialogue;
+  delete document.body.dataset.introDialogueReady;
+
+  setVisible("pauseBtn", true);
+};
+
+const advanceIntroDialogue = () => {
+  if (!isIntroDialogueActive()) return;
+
+  if (document.body.dataset.introDialogueReady !== "true") {
+    return;
+  }
+
+  const element = getElement("dlg");
+
+  if (!element || element.hidden) {
+    finishIntroDialogue();
+    return;
+  }
+
+  const textElement = element.querySelector(".txt");
+  const instruction = element.querySelector("i");
+
+  if (dialogue.typing) {
+    window.clearInterval(dialogue.typingTimer);
+
+    dialogue.typingTimer = null;
+    dialogue.typing = false;
+
+    textElement.textContent =
+      dialogue.messages[dialogue.messageIndex];
+
+    const lastMessage =
+      dialogue.messageIndex >= dialogue.messages.length - 1;
+
+    if (instruction) {
+      instruction.textContent = lastMessage
+        ? "E · CLOSE"
+        : "E · CONTINUE";
+    }
+
+    return;
+  }
+
+  if (dialogue.messageIndex < dialogue.messages.length - 1) {
+    dialogue.messageIndex++;
+
+    say(
+      element,
+      dialogue.messages[dialogue.messageIndex]
+    );
+
+    return;
+  }
+
+  finishIntroDialogue();
+};
 /* ---------- ACTIONS ---------- */
 const handleAction = action => {
   if (game.mode === "credits") {
@@ -2584,6 +2739,14 @@ const handleAction = action => {
   }
 
   unlockAudio();
+
+  if (isIntroDialogueActive()) {
+    if (action === "interact") {
+      advanceIntroDialogue();
+    }
+
+    return;
+  }
 
   switch (action) {
     case "start":
@@ -2706,7 +2869,6 @@ const handleAction = action => {
       break;
   }
 };
-
 /* ---------- UPDATE AND DRAW ---------- */
 
 const updateGame = deltaTime => {

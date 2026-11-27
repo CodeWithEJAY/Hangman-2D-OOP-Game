@@ -112,3 +112,102 @@
 .dlg .txt {
   white-space: pre-line;
 }
+
+.opening-transition {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    overflow: hidden;
+    background: #080e20;
+    opacity: 1;
+    pointer-events: all;
+}
+
+.opening-transition::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: #e7f5ff;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.opening-transition.is-flashing::before {
+    animation: opening-light-flash 420ms steps(1, end) both;
+}
+
+.opening-transition.is-revealing {
+    animation: opening-world-reveal 720ms ease-out forwards;
+}
+
+canvas.opening-screen-shake {
+    animation: opening-screen-shake 430ms steps(5, end);
+}
+
+@keyframes opening-light-flash {
+    0%, 100% {
+        opacity: 0;
+    }
+
+    13% {
+        opacity: .95;
+    }
+
+    28% {
+        opacity: .08;
+    }
+
+    43% {
+        opacity: .72;
+    }
+
+    59% {
+        opacity: 0;
+    }
+}
+
+@keyframes opening-world-reveal {
+    0% {
+        opacity: 1;
+    }
+
+    18% {
+        opacity: .94;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes opening-screen-shake {
+    0%, 100% {
+        translate: 0 0;
+    }
+
+    20% {
+        translate: -4px 1px;
+    }
+
+    40% {
+        translate: 4px -2px;
+    }
+
+    60% {
+        translate: -3px 1px;
+    }
+
+    80% {
+        translate: 2px -1px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    canvas.opening-screen-shake {
+        animation: none;
+    }
+
+    .opening-transition.is-revealing {
+        animation-duration: 1s;
+    }
+}
