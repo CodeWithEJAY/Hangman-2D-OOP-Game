@@ -17,7 +17,7 @@ const pressedKeys = new Set();
 const keyMap = {
   ArrowLeft: "left",
   a: "left",
-  A: "left",  
+  A: "left",
 
   ArrowRight: "right",
   d: "right",
@@ -47,19 +47,6 @@ const dispatchLetter = letter => {
   );
 };
 
-const updateInputState = () => {
-  inputState.left = [...pressedKeys].some(
-    key => keyMap[key] === "left"
-  );
-
-  inputState.right = [...pressedKeys].some(
-    key => keyMap[key] === "right"
-  );
-
-  inputState.jump = [...pressedKeys].some(
-    key => keyMap[key] === "jump"
-  );
-};
 const isTypingTarget = target => {
   if (!(target instanceof HTMLElement)) return false;
 
@@ -73,6 +60,33 @@ const isIntroDialogueActive = () => {
   return document.body.dataset.introDialogue === "true";
 };
 
+const isBossVictoryDialogueActive = () => {
+  return document.body.dataset.bossVictoryDialogue === "true";
+};
+
+const updateInputState = () => {
+  if (isBossVictoryDialogueActive()) {
+    pressedKeys.clear();
+
+    inputState.left = false;
+    inputState.right = false;
+    inputState.jump = false;
+
+    return;
+  }
+
+  inputState.left = [...pressedKeys].some(
+    key => keyMap[key] === "left"
+  );
+
+  inputState.right = [...pressedKeys].some(
+    key => keyMap[key] === "right"
+  );
+
+  inputState.jump = [...pressedKeys].some(
+    key => keyMap[key] === "jump"
+  );
+};
 
 const finishIntroDialogue = () => {
   closeDialogue(true);
@@ -148,7 +162,7 @@ const handleKeyDown = event => {
     return;
   }
 
-  if (document.body.dataset.introDialogue === "true") {
+  if (isIntroDialogueActive()) {
     event.preventDefault();
 
     if (
@@ -158,6 +172,27 @@ const handleKeyDown = event => {
       dispatchAction("interact");
     }
 
+    return;
+  }
+
+  if (isBossVictoryDialogueActive()) {
+    event.preventDefault();
+
+    if (
+      event.repeat ||
+      (key.toLowerCase() !== "e" && key !== "Enter")
+    ) {
+      return;
+    }
+
+    if (
+      document.body.dataset.bossVictoryTyping === "true" ||
+      document.body.dataset.bossVictoryFinalLine === "true"
+    ) {
+      return;
+    }
+
+    dispatchAction("interact");
     return;
   }
 
@@ -226,6 +261,7 @@ const handleWindowBlur = () => {
   pressedKeys.clear();
   updateInputState();
 };
+
 const handlePointerDown = event => {
   const control = event.target.closest("[data-k]");
 
@@ -235,7 +271,19 @@ const handlePointerDown = event => {
 
   const direction = control.dataset.k;
 
-  if (document.body.dataset.introDialogue === "true") {
+  if (isBossVictoryDialogueActive()) {
+    if (
+      direction === "e" &&
+      document.body.dataset.bossVictoryTyping !== "true" &&
+      document.body.dataset.bossVictoryFinalLine !== "true"
+    ) {
+      dispatchAction("interact");
+    }
+
+    return;
+  }
+
+  if (isIntroDialogueActive()) {
     if (direction === "e") {
       dispatchAction("interact");
     }
@@ -257,7 +305,6 @@ const handlePointerDown = event => {
     updateInputState();
   }
 };
-
 const handlePointerUp = event => {
   const control = event.target.closest("[data-k]");
 
@@ -283,6 +330,16 @@ const handleButtonClick = event => {
 
     if (actionButton?.dataset.act === "interact") {
       advanceIntroDialogue();
+    }
+
+    return;
+  }
+
+  if (isBossVictoryDialogueActive()) {
+    const actionButton = event.target.closest("[data-act]");
+
+    if (actionButton?.dataset.act === "interact") {
+      dispatchAction("interact");
     }
 
     return;
