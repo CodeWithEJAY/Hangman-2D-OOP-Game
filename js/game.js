@@ -814,7 +814,6 @@ const startBossTimer = () => {
     }
   }, 1000);
 };
-
 const bossRoundWon = () => {
   clearInterval(game.boss.timer);
   game.boss.timer = null;
@@ -823,12 +822,12 @@ const bossRoundWon = () => {
   successTimer = null;
 
   game.boss.hp--;
-  playHankAttackSound();
-playBossDamageSound();
 
-  bossDamageAnimation();
+  playHankAttackSound();
+  playBossDamageSound();
 
   renderQuest();
+  bossDamageAnimation();
 
   if (game.boss.hp <= 0) {
     defeatBoss();
@@ -843,6 +842,7 @@ playBossDamageSound();
     }
   }, 1200);
 };
+
 const bossTimeout = () => {
   clearInterval(game.boss.timer);
   game.boss.timer = null;
@@ -3031,7 +3031,8 @@ const renderGame = time => {
     Boolean(dialogue.npc),
     game.boss.unlocked,
     game.boss.defeated,
-    bossEntryProgress
+    bossEntryProgress,
+    dialogue.npc === BOSS && dialogue.typing
   );
 
   if (game.player) {
@@ -3151,36 +3152,64 @@ export const initializeGame = () => {
 };
 
 const bossDamageAnimation = () => {
-  const boss = getElement("bossCharacter");
-  const label = getElement("bossHitLabel");
+  const bossArt =
+    getElement("bossDisplay")?.querySelector(".boss-side-art") ||
+    document.querySelector(".boss-side-art");
 
-  if (!boss) return;
-
-  boss.classList.remove("hit");
-  void boss.offsetWidth;
-  boss.classList.add("hit");
-
-  if (label) {
-    label.textContent = "-1 HP";
-    label.classList.remove("show");
-
-    void label.offsetWidth;
-    label.classList.add("show");
+  if (!bossArt) {
+    console.warn("Boss damage effect: .boss-side-art not found.");
+    return;
   }
+
+  const bossCharacter =
+    bossArt.querySelector("#bossCharacter") ||
+    bossArt.querySelector("svg");
+
+  if (!bossCharacter) {
+    console.warn("Boss damage effect: boss SVG not found.");
+    return;
+  }
+
+  bossCharacter.id = "bossCharacter";
+
+  bossCharacter.classList.remove("boss-hit");
+  bossArt.classList.remove("boss-hit-flash");
+  bossArt.querySelector(".boss-impact")?.remove();
+
+  void bossCharacter.offsetWidth;
+
+  bossCharacter.classList.add("boss-hit");
+  bossArt.classList.add("boss-hit-flash");
 
   const impact = document.createElement("div");
   impact.className = "boss-impact";
-  impact.innerHTML = "<i></i>".repeat(8);
 
-  boss.appendChild(impact);
+  const directions = [
+    [-26, -22],
+    [0, -34],
+    [26, -22],
+    [36, 0],
+    [26, 24],
+    [0, 34],
+    [-26, 24],
+    [-36, 0]
+  ];
+
+  impact.innerHTML = directions
+    .map(
+      ([x, y]) =>
+        `<i style="--hit-x:${x}px;--hit-y:${y}px"></i>`
+    )
+    .join("");
+
+  bossArt.appendChild(impact);
 
   window.setTimeout(() => {
+    bossCharacter.classList.remove("boss-hit");
+    bossArt.classList.remove("boss-hit-flash");
     impact.remove();
-    boss.classList.remove("hit");
-  }, 700);
+  }, 550);
 };
-
-
 // this is for testing the game i did not go for other file 
 //since this is the main js file that is getting fetched hassle 
 

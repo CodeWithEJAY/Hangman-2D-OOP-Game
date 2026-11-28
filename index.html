@@ -16,7 +16,6 @@
     <link rel="stylesheet" href="./style/ResultPanel.css"> <!--End game modeal-->
     <link rel="stylesheet" href="./style//Animation.css">
     <link rel="stylesheet" href="./style/Credits.css"> <!-- credit scene css-->
-    <link rel="stylesheet" href="./style/IntroCutscene.css">
     <link rel="stylesheet" href="./style/StudioOverlay.css">
 </head>
 <body>
@@ -235,39 +234,68 @@
                  PAUSE MENU
             =============================== -->
 <section id="pause" class="screen-view">
-    <div class="content-panel pause-panel" role="dialog" aria-labelledby="pauseH">
+    <div
+        class="content-panel pause-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pauseH"
+    >
+        <div class="pause-header">
+            <span class="pause-header-label">HANK'S LAST STAND</span>
+            <span class="pause-header-status">GAME MENU</span>
+        </div>
 
-        <div class="pause-icon">
+        <div class="pause-heading">
+            <div class="pause-icon" aria-hidden="true">
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="pause-heading-copy">
+                <h2 id="pauseH">PAUSED</h2>
+                <p>Your adventure is on hold.</p>
+            </div>
+        </div>
+
+        <div class="pause-divider">
             <span></span>
+            <span>WHAT WOULD YOU LIKE TO DO?</span>
             <span></span>
         </div>
 
-        <h2 id="pauseH">PAUSED</h2>
-
-        <p>Take a breather, Hank.</p>
-
         <div class="pause-actions">
-            <button
-                type="button"
-                class="pause-quit"
-                data-act="quit"
-            >
-                QUIT TO TITLE
-            </button>
-
             <button
                 type="button"
                 class="pause-resume"
                 data-act="resume"
             >
-                <span>▶</span> RESUME
+                <span class="pause-action-icon">▶</span>
+                <span class="pause-action-copy">
+                    <strong>RESUME GAME</strong>
+                    <small>Continue your adventure</small>
+                </span>
+                <span class="pause-action-arrow">›</span>
+            </button>
+
+            <button
+                type="button"
+                class="pause-quit"
+                data-act="quit"
+            >
+                <span class="pause-action-icon">↩</span>
+                <span class="pause-action-copy">
+                    <strong>QUIT TO TITLE</strong>
+                    <small>Return to the main menu</small>
+                </span>
+                <span class="pause-action-arrow">›</span>
             </button>
         </div>
 
         <div class="pause-footer">
-            PRESS <kbd>ESC</kbd> TO RESUME
+            <span>PRESS</span>
+            <kbd>ESC</kbd>
+            <span>TO RESUME</span>
         </div>
-
     </div>
 </section>
 

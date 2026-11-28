@@ -573,7 +573,8 @@ export const drawNPCs = (
   dialogueOpen = false,
   bossUnlocked = false,
   bossDefeated = false,
-  bossEntryProgress = 1
+  bossEntryProgress = 1,
+  bossTalking = false
 ) => {
   if (!player) return;
 
@@ -587,17 +588,18 @@ export const drawNPCs = (
       mode,
       dialogueOpen,
       performance.now() / 1000,
-      bossEntryProgress
+      bossEntryProgress,
+      bossTalking
     );
   }
 };
-
 export const drawBoss = (
   playerX,
   mode = "play",
   dialogueOpen = false,
   time = 0,
-  entryProgress = 1
+  entryProgress = 1,
+  isTalking = false
 ) => {
   const sx = px(BOSS.x);
   const y = GROUND_Y;
@@ -623,7 +625,13 @@ export const drawBoss = (
     );
   }
 
-  drawBossPixelArt(sx, bossY, 1.5, time);
+  drawBossPixelArt(
+    sx,
+    bossY,
+    1.5,
+    time,
+    isTalking
+  );
 
   if (progress >= 0.9) {
     rc(sx - 11, bossY - 248, 22, 4, "#ffd166");
@@ -643,6 +651,7 @@ export const drawBoss = (
     );
 
     ctx.fillStyle = "#ffffff";
+
     ctx.fillText(
       "THE HANGMAN KING",
       sx,
@@ -671,7 +680,6 @@ export const drawBoss = (
 
   ctx.textAlign = "left";
 };
-
 export const bossSVG = () => `
 <svg class="boss-sprite coder-king"
      viewBox="0 0 100 130"
@@ -922,7 +930,13 @@ export const say = (element, text) => {
   }, 22);
 };
 
-const drawBossPixelArt = (x, baseline, scale = 1.5, time = 0) => {
+const drawBossPixelArt = (
+  x,
+  baseline,
+  scale = 1.5,
+  time = 0,
+  isTalking = false
+) => {
   ctx.save();
 
   ctx.translate(x - 50 * scale, baseline - 130 * scale);
@@ -989,12 +1003,41 @@ const drawBossPixelArt = (x, baseline, scale = 1.5, time = 0) => {
   p(38, 44, 8, 3, "#493b3b");
   p(54, 44, 8, 3, "#493b3b");
 
-  p(40, 44, 4, 2, "#eee0ca");
-  p(56, 44, 4, 2, "#eee0ca");
+  const blinkPhase = time % 4.8;
+  const isBlinking = blinkPhase > 4.55 && blinkPhase < 4.7;
+
+  if (isBlinking) {
+    p(39, 44, 6, 3, "#d7a083");
+    p(55, 44, 6, 3, "#d7a083");
+    p(39, 45, 6, 2, "#8c6157");
+    p(55, 45, 6, 2, "#8c6157");
+  } else {
+    p(40, 44, 4, 2, "#eee0ca");
+    p(56, 44, 4, 2, "#eee0ca");
+  }
 
   p(42, 49, 16, 7, "#c58a70");
   p(49, 48, 3, 6, "#b87963");
-  p(46, 58, 8, 2, "#855b56");
+
+  if (isTalking) {
+    const mouthFrame = Math.floor(time * 12) % 3;
+    const mouthHeights = [2, 5, 3];
+    const mouthHeight = mouthHeights[mouthFrame];
+
+    p(
+      46,
+      58,
+      8,
+      mouthHeight,
+      mouthHeight > 2 ? "#493b3b" : "#855b56"
+    );
+
+    if (mouthHeight >= 5) {
+      p(48, 58, 4, 1, "#f7f2df");
+    }
+  } else {
+    p(46, 58, 8, 2, "#855b56");
+  }
 
   p(40, 54, 5, 4, "#b87963");
   p(55, 54, 5, 4, "#b87963");
