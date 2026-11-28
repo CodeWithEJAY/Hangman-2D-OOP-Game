@@ -95,182 +95,650 @@ button:focus-visible {
 .status-chip b {
     color: var(--royal);
 }
+
+
+/* PAUSE BUTTON */
+
 .pause-button {
     position: absolute;
     top: 36px;
     right: 12px;
     z-index: 3;
     display: none;
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
     padding: 0;
-    border: 2px solid #536486;
-    border-radius: 3px;
-    background: #172443;
-    color: #ffd166;
+    border: 3px solid var(--brown);
+    border-radius: 5px;
+    background: #f9c95b;
+    color: var(--brown);
     font-size: 14px;
-    font-weight: bold;
-    box-shadow: 0 3px 0 #080e20;
+    font-weight: 900;
+    box-shadow: 0 4px 0 #7a3d1e;
     cursor: pointer;
     transition: 0.15s ease;
 }
 
 .pause-button:hover {
-    background: #ffd166;
-    color: #10182f;
+    background: #ffe27a;
 }
 
-/* PAUSE MENU */
+.pause-button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #7a3d1e;
+}
+
+/* PAUSE SCREEN */
+
+#pause.screen-view {
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+    background: rgba(8, 14, 32, 0.76);
+}
+
+/* PAUSE PANEL */
 
 #pause .pause-panel {
     position: relative;
     box-sizing: border-box;
-    width: min(85%, 340px);
-    padding: 30px 27px 17px;
+    width: min(390px, 94%);
+    padding: 15px 19px 12px;
     overflow: hidden;
-    border: 2px solid #536486;
-    border-radius: 4px;
-    background: linear-gradient(
-        145deg,
-        #202e50,
-        #172443 65%,
-        #10182f
-    );
-    color: #f7f3e8;
-    text-align: center;
+    border: 4px solid var(--brown);
+    border-radius: 8px;
+    background: #f9c95b;
+    color: var(--brown);
     box-shadow:
-        0 5px 0 #080e20,
-        0 12px 25px rgba(0, 0, 0, 0.35);
+        inset 0 0 0 4px #fbd878,
+        0 7px 0 #7a3d1e,
+        0 16px 45px rgba(0, 0, 0, 0.35);
+    animation: pause-enter 0.3s steps(5, end);
 }
 
-#pause .pause-panel::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: #ffd166;
+#pause.screen-view.active {
+    display: flex;
+}
+
+#pause.screen-view[hidden] {
+    display: none !important;
+}
+
+#pause .pause-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 -8px 20px;
+    padding: 6px 10px;
+    border: 3px solid #fff7;
+    background: #e8434f;
+    color: #fff3c0;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+}
+
+#pause .pause-header-status {
+    color: #ffe09a;
+}
+
+/* TITLE */
+
+#pause .pause-heading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 5px 0 15px;
 }
 
 #pause .pause-icon {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    gap: 7px;
-    width: 53px;
-    height: 53px;
-    margin: 0 auto 15px;
-    border: 1px solid rgba(255, 209, 102, 0.5);
-    border-radius: 4px;
-    background: rgba(255, 209, 102, 0.07);
+    gap: 6px;
+    width: 54px;
+    height: 54px;
+    margin: 0;
+    border: 3px solid var(--brown);
+    border-radius: 5px;
+    background: #f6bd45;
+    box-shadow: 0 4px 0 #7a3d1e;
 }
 
 #pause .pause-icon span {
-    width: 7px;
-    height: 23px;
-    background: #ffd166;
-    box-shadow: 2px 2px 0 #8c682b;
+    width: 8px;
+    height: 24px;
+    border: 2px solid var(--brown);
+    border-radius: 2px;
+    background: #e8434f;
 }
 
-#pause .pause-panel h2 {
+#pause .pause-heading-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#pause .pause-heading h2 {
     margin: 0;
-    color: #ffd166;
-    font-size: clamp(25px, 5vw, 31px);
+    color: var(--brown);
+    font-size: clamp(29px, 6vw, 36px);
     font-weight: 900;
+    line-height: 1;
     letter-spacing: 3px;
-    text-shadow: 2px 2px 0 #72552b;
+    text-shadow: 2px 2px 0 #fbe19a;
 }
 
-#pause .pause-panel > p {
-    margin: 10px 0 23px;
-    color: #aebbd4;
-    font-size: 12px;
+#pause .pause-heading-copy p {
+    margin: 0;
+    color: #80502f;
+    font-size: 11px;
+    font-weight: 600;
 }
+
+/* DIVIDER */
+
+#pause .pause-divider {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 8px 0 15px;
+    color: #98683f;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+}
+
+#pause .pause-divider span:first-child,
+#pause .pause-divider span:last-child {
+    height: 2px;
+    flex: 1;
+    background: rgba(122, 61, 30, 0.2);
+}
+
+/* MENU ACTIONS */
 
 #pause .pause-actions {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
 }
 
 #pause .pause-actions button {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 9px;
     width: 100%;
-    min-height: 42px;
-    padding: 11px;
-    border: 1px solid #536486;
-    border-radius: 3px;
-    background: #263655;
-    color: #dce5f2;
+    min-height: 62px;
+    padding: 9px 12px;
+    border: 3px solid var(--brown);
+    border-radius: 4px;
+    color: var(--brown);
     font: inherit;
-    font-size: 11px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    box-shadow: 0 3px 0 #080e20;
+    text-align: left;
+    box-shadow: 0 4px 0 var(--brown);
     cursor: pointer;
-    transition: 0.15s ease;
-}
-
-#pause .pause-quit {
-    color: #aebbd4;
-}
-
-#pause .pause-quit:hover {
-    border-color: #91a4cb;
-    background: #344668;
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
 }
 
 #pause .pause-resume {
-    border-color: #d6a94e !important;
-    background: #ffd166 !important;
-    color: #172443 !important;
-    box-shadow: 0 3px 0 #89652c !important;
+    background: #fbd23c;
 }
 
 #pause .pause-resume:hover {
-    background: #ffe09a !important;
+    background: #ffe27a;
+}
+
+#pause .pause-quit {
+    background: #cfe3fb;
+}
+
+#pause .pause-quit:hover {
+    background: #e2f0ff;
+}
+
+#pause .pause-action-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    margin-right: 12px;
+    border: 2px solid var(--brown);
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+#pause .pause-action-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#pause .pause-action-copy strong {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+}
+
+#pause .pause-action-copy small {
+    color: #80502f;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+#pause .pause-action-arrow {
+    margin-left: 8px;
+    font-size: 25px;
+    font-weight: 900;
+}
+
+#pause .pause-actions button:hover {
     transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--brown);
 }
 
 #pause .pause-actions button:active {
-    transform: translateY(1px);
-    box-shadow: 0 1px 0 #080e20;
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 var(--brown);
 }
 
+/* FOOTER */
+
 #pause .pause-footer {
-    margin-top: 21px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 19px;
     padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.09);
-    color: #8495b4;
+    border-top: 2px solid rgba(122, 61, 30, 0.2);
+    color: #80502f;
     font-size: 9px;
+    font-weight: 900;
     letter-spacing: 1px;
 }
 
 #pause .pause-footer kbd {
-    padding: 3px 6px;
-    border: 1px solid #536486;
-    border-radius: 2px;
-    background: #10182f;
-    color: #ffd166;
+    padding: 3px 7px;
+    border: 2px solid var(--brown);
+    border-radius: 3px;
+    background: #fff0bd;
+    color: var(--brown);
     font: inherit;
-    font-weight: bold;
+    font-weight: 900;
+    box-shadow: 0 2px 0 var(--brown);
 }
+
+/* FOCUS AND ANIMATION */
 
 #pause button:focus-visible,
 .pause-button:focus-visible {
-    outline: 2px solid #ffd166;
-    outline-offset: 3px;
+    outline: 3px solid #fff;
+    outline-offset: 4px;
 }
 
-@media (max-width: 520px) {
-    #pause .pause-panel {
-        width: 88%;
-        padding: 25px 20px 15px;
+@keyframes pause-enter {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }
+
+/* RESPONSIVE */
+
+/* PAUSE BUTTON */
+
+.pause-button {
+    position: absolute;
+    top: 36px;
+    right: 12px;
+    z-index: 3;
+    display: none;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 3px solid var(--brown);
+    border-radius: 5px;
+    background: #f9c95b;
+    color: var(--brown);
+    font-size: 14px;
+    font-weight: 900;
+    box-shadow: 0 4px 0 #7a3d1e;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.pause-button:hover {
+    background: #ffe27a;
+}
+
+.pause-button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #7a3d1e;
+}
+
+/* PAUSE SCREEN */
+
+#pause.screen-view {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+    background: rgba(8, 14, 32, 0.76);
+}
+
+/* PAUSE PANEL */
+
+#pause .pause-panel {
+    position: relative;
+    box-sizing: border-box;
+    width: min(390px, 94%);
+    padding: 19px 19px 14px;
+    overflow: hidden;
+    border: 4px solid var(--brown);
+    border-radius: 8px;
+    background: #f9c95b;
+    color: var(--brown);
+    box-shadow:
+        inset 0 0 0 4px #fbd878,
+        0 7px 0 #7a3d1e,
+        0 16px 45px rgba(0, 0, 0, 0.35);
+    animation: pause-enter 0.3s steps(5, end);
+}
+
+/* HEADER */
+
+#pause .pause-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 -8px 20px;
+    padding: 6px 10px;
+    border: 3px solid rgba(255, 255, 255, 0.45);
+    background: #e8434f;
+    color: #fff3c0;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+}
+
+#pause .pause-header-status {
+    color: #ffe09a;
+}
+
+/* TITLE */
+
+#pause .pause-heading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 5px 0 15px;
+    background: transparent;
+}
+
+#pause .pause-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 54px;
+    height: 54px;
+    margin: 0;
+    border: 3px solid var(--brown);
+    border-radius: 5px;
+    background: #f6bd45;
+    box-shadow: 0 4px 0 #7a3d1e;
+}
+
+#pause .pause-icon span {
+    width: 8px;
+    height: 24px;
+    border: 2px solid var(--brown);
+    border-radius: 2px;
+    background: #e8434f;
+}
+
+#pause .pause-heading-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    background: transparent;
+}
+
+#pause .pause-eyebrow {
+    color: #96633b;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+#pause .pause-heading h2 {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent !important;
+    color: var(--brown);
+    font-size: clamp(29px, 6vw, 36px);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 3px;
+    text-shadow: 2px 2px 0 #fbe19a;
+}
+
+/* DIVIDER */
+
+#pause .pause-divider {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 8px 0 15px;
+    color: #98683f;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+}
+
+#pause .pause-divider span:first-child,
+#pause .pause-divider span:last-child {
+    height: 2px;
+    flex: 1;
+    background: rgba(122, 61, 30, 0.2);
+}
+
+/* MENU ACTIONS */
+
+#pause .pause-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#pause .pause-actions button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 62px;
+    padding: 9px 12px;
+    border: 3px solid var(--brown);
+    border-radius: 4px;
+    color: var(--brown);
+    font: inherit;
+    text-align: left;
+    box-shadow: 0 4px 0 var(--brown);
+    cursor: pointer;
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+#pause .pause-resume {
+    background: #fbd23c;
+}
+
+#pause .pause-resume:hover {
+    background: #ffe27a;
+}
+
+#pause .pause-quit {
+    background: #cfe3fb;
+}
+
+#pause .pause-quit:hover {
+    background: #e2f0ff;
+}
+
+#pause .pause-action-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    margin-right: 12px;
+    border: 2px solid var(--brown);
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+#pause .pause-action-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#pause .pause-action-copy strong {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+}
+
+#pause .pause-action-copy small {
+    color: #80502f;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+#pause .pause-action-arrow {
+    margin-left: 8px;
+    font-size: 25px;
+    font-weight: 900;
+}
+
+#pause .pause-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--brown);
+}
+
+#pause .pause-actions button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 var(--brown);
+}
+
+/* FOOTER */
+
+#pause .pause-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 19px;
+    padding-top: 12px;
+    border-top: 2px solid rgba(122, 61, 30, 0.2);
+    color: #80502f;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+#pause .pause-footer kbd {
+    padding: 3px 7px;
+    border: 2px solid var(--brown);
+    border-radius: 3px;
+    background: #fff0bd;
+    color: var(--brown);
+    font: inherit;
+    font-weight: 900;
+    box-shadow: 0 2px 0 var(--brown);
+}
+
+/* FOCUS AND ANIMATION */
+
+#pause button:focus-visible,
+.pause-button:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 4px;
+}
+
+@keyframes pause-enter {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 380px) {
+    #pause .pause-panel {
+        padding: 12px 13px 11px;
+    }
+
+    #pause .pause-header {
+        margin-bottom: 15px;
+    }
+
+    #pause .pause-heading {
+        gap: 11px;
+    }
+
+    #pause .pause-icon {
+        width: 46px;
+        height: 46px;
+    }
+
+    #pause .pause-heading h2 {
+        font-size: 29px;
+    }
+
+    #pause .pause-actions button {
+        min-height: 57px;
+    }
+}
+
+
+
 
 @media (pointer: coarse) {
     .touch-controls {
@@ -288,374 +756,733 @@ button:focus-visible {
     }
 }
 .boss-battle-layout {
-  width: min(100%, 430px);
+    width: min(100%, 430px);
 }
 
 #gameArt.boss-mode-art {
-  width: 100%;
-  min-width: 260px;
+    width: 100%;
+    min-width: 260px;
 }
 
 .boss-battle-scene {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
 }
 
 .boss-battle-header {
-  width: min(100%, 340px);
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  color: #fff;
-  font-size: 13px;
-  text-shadow: 2px 2px #171326;
+    width: min(100%, 340px);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: #fff;
+    font-size: 13px;
+    text-align: center;
+    text-shadow: 2px 2px #171326;
+}
+
+.boss-battle-header::before {
+    display: none;
+    content: none;
 }
 
 .boss-health-track {
-  width: 100%;
-  height: 13px;
-  overflow: hidden;
-  background: #30233b;
-  border: 3px solid #171326;
-  border-radius: 4px;
+    position: relative;
+    width: 100%;
+    height: 16px;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: #30233b;
+    border: 3px solid #171326;
+    border-radius: 3px;
+    box-shadow: 0 0 0 1px #684050;
 }
 
 #bossHPFill {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, #c83cff, #ff6f7d);
-  transition: width 0.35s steps(5);
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        #9f183c,
+        #e8435f 65%,
+        #ff8a70
+    );
+    box-shadow: 0 0 8px rgba(255, 70, 105, .4);
+    transition: width .4s steps(6, end);
+}
+
+#bossHPFill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        transparent 0 17px,
+        rgba(23, 19, 38, .35) 17px 19px
+    );
 }
 
 .boss-combatants {
-  min-height: 190px;
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 12px;
+    position: relative;
+    min-height: 190px;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 12px;
 }
 
 .boss-character {
-  position: relative;
-  width: 150px;
-  height: 190px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform-origin: center bottom;
+    position: relative;
+    width: 150px;
+    height: 190px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center bottom;
 }
 
 .boss-sprite {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  image-rendering: pixelated;
-  filter: drop-shadow(4px 5px 0 #171326);
-  animation: bossIdle 1.8s ease-in-out infinite;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    image-rendering: pixelated;
+    filter: drop-shadow(4px 5px 0 #171326);
+    animation: bossIdle 1.8s ease-in-out infinite;
 }
 
 .boss-hank {
-  width: 95px;
-  height: 105px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    width: 95px;
+    height: 105px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .boss-hank .gallows {
-  width: 100px;
-  height: 100px;
-}
-
-.boss-character.hit {
-  animation: bossRecoil 0.5s steps(5) both;
-}
-
-.boss-character.hit .boss-sprite {
-  animation: bossFlash 0.5s steps(2) both;
+    width: 100px;
+    height: 100px;
 }
 
 .boss-hit-label {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  z-index: 5;
-  color: #ffdf68;
-  font-size: 20px;
-  font-weight: 900;
-  opacity: 0;
-  pointer-events: none;
-  text-shadow: 2px 2px #171326;
-  white-space: nowrap;
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    z-index: 6;
+    color: #ffdf68;
+    font-size: 20px;
+    font-weight: 900;
+    opacity: 0;
+    pointer-events: none;
+    text-shadow: 2px 2px #171326;
+    white-space: nowrap;
 }
 
 .boss-hit-label.show {
-  animation: bossHitLabel 0.8s ease-out forwards;
+    animation: bossHitLabel .8s ease-out forwards;
 }
 
-.boss-impact {
-  position: absolute;
-  inset: 35% 20%;
-  pointer-events: none;
-  z-index: 4;
-}
-
-.boss-impact i {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  background: #ffd166;
-  box-shadow: 0 0 7px #ff6f7d;
-  animation: bossSpark 0.55s ease-out forwards;
-}
-
-.boss-impact i:nth-child(1) { --x: -40px; --y: -30px; }
-.boss-impact i:nth-child(2) { --x: 35px; --y: -35px; }
-.boss-impact i:nth-child(3) { --x: -50px; --y: 10px; }
-.boss-impact i:nth-child(4) { --x: 48px; --y: 12px; }
-.boss-impact i:nth-child(5) { --x: -20px; --y: 38px; }
-.boss-impact i:nth-child(6) { --x: 25px; --y: 35px; }
-.boss-impact i:nth-child(7) { --x: 0px; --y: -45px; }
-.boss-impact i:nth-child(8) { --x: 0px; --y: 45px; }
-
-@keyframes bossIdle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
-
-@keyframes bossRecoil {
-  0% { transform: translateX(0) rotate(0); }
-  20% { transform: translateX(-13px) rotate(-5deg); }
-  45% { transform: translateX(12px) rotate(5deg); }
-  70% { transform: translateX(-5px); }
-  100% { transform: translateX(0) rotate(0); }
-}
-
-@keyframes bossFlash {
-  0%, 100% { filter: brightness(1); }
-  25%, 60% { filter: brightness(3) saturate(0.2); }
-}
-
-@keyframes bossHitLabel {
-  0% { opacity: 0; transform: translate(-50%, 10px) scale(0.7); }
-  25% { opacity: 1; transform: translate(-50%, -5px) scale(1.2); }
-  100% { opacity: 0; transform: translate(-50%, -35px) scale(1); }
-}
-
-@keyframes bossSpark {
-  from {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translate(var(--x), var(--y)) scale(0.2);
-  }
-}
-.boss-side-panel[hidden] {
-  display: none !important;
+.boss-side-panel[hidden],
+#bossDisplay[hidden] {
+    display: none !important;
 }
 
 .boss-fight-layout {
-  display: grid !important;
-  grid-template-columns:
-    minmax(110px, .9fr)
-    minmax(180px, 1.3fr)
-    minmax(120px, .9fr);
-  align-items: center;
-  justify-content: stretch;
-  flex-wrap: nowrap;
-  gap: 10px;
-  height: 195px;
-  max-height: 195px;
-  min-height: 0;
-  margin: 0;
+    position: relative;
+    display: grid !important;
+    grid-template-columns:
+        minmax(85px, .9fr)
+        minmax(170px, 1.3fr)
+        minmax(110px, .9fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: center;
+    justify-content: stretch;
+    gap: 8px;
+    box-sizing: border-box;
+    height: 195px;
+    max-height: 195px;
+    min-height: 0;
+    margin: 0;
+    padding: 30px 8px 5px;
+    overflow: visible;
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
-.boss-fight-layout .character-art {
-  width: 100%;
-  min-width: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.boss-fight-layout::before {
+    display: none;
+    content: none;
 }
 
-.boss-fight-layout #gameArt {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.boss-fight-layout #gameArt .gallows {
-  width: 145px;
-  height: 145px;
-}
-
-.boss-fight-layout .word-area {
-  width: 100%;
-  min-width: 0;
-  gap: 8px;
-}
-
-.boss-side-panel {
-  width: 100%;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 5px;
-  color: #fff;
-  text-align: center;
+#bossDisplay:not([hidden]) {
+    display: contents !important;
 }
 
 .boss-side-info {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 900;
-  text-shadow: 2px 2px #171326;
+    position: absolute;
+    inset: 0 auto auto 0;
+    z-index: 5;
+    width: 100%;
+    height: 0;
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
 }
 
-.boss-health-track {
-  width: 100%;
-  height: 13px;
-  overflow: hidden;
-  background: #30233b;
-  border: 3px solid #171326;
-  border-radius: 4px;
+.boss-side-info > strong,
+#bossHPText {
+    display: none !important;
 }
 
-#bossHPFill {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, #c83cff, #ff6f7d);
-  transition: width .35s steps(5);
+.boss-side-info .boss-health-track {
+    position: absolute;
+    top: 0;
+    left: 85.5%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(125px, 27%);
+    height: 17px;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 #bossTimerText {
-  color: #ffd166;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    right: auto;
+    z-index: 6;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
+    min-height: 29px;
+    margin: 0;
+    padding: 4px 10px;
+    border: 2px solid #b9873e;
+    border-radius: 3px;
+    background: transparent;
+    color: #ffd166;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    text-shadow: 2px 2px #171326;
+    box-shadow: none;
 }
 
-.boss-side-art {
-  height: 145px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.boss-fight-layout .character-art {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.boss-side-art .boss-sprite {
-  width: 125px;
-  height: 145px;
-  image-rendering: pixelated;
+.boss-fight-layout #gameArt {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
+
+.boss-fight-layout #gameArt .gallows {
+    width: 145px;
+    height: 145px;
+}
+
+.boss-fight-layout .word-area {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+}
+
+.boss-fight-layout .boss-side-art {
+    grid-column: 3;
+    grid-row: 1;
+    position: relative;
+    height: 165px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    isolation: isolate;
+}
+
+.boss-fight-layout .boss-side-art .boss-sprite {
+    position: relative;
+    z-index: 1;
+    width: 130px;
+    height: 169px;
+    max-width: none;
+    image-rendering: pixelated;
+    filter: drop-shadow(4px 5px 0 #171326);
+    animation: bossIdle 1.8s ease-in-out infinite;
+}
+
+#bossCharacter {
+    position: relative;
+    z-index: 1;
+    transform-box: fill-box;
+    transform-origin: center bottom;
+}
+
+#bossCharacter.boss-hit {
+    animation: boss-hit-reaction 440ms steps(6, end) both;
+}
+
+.boss-side-art::before {
+    content: "";
+    position: absolute;
+    top: 46%;
+    left: 50%;
+    z-index: 3;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        rgba(255, 248, 224, .8) 0%,
+        rgba(255, 105, 74, .45) 23%,
+        rgba(232, 67, 95, .2) 45%,
+        transparent 72%
+    );
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.3);
+    pointer-events: none;
+}
+
+.boss-side-art.boss-hit-flash::before {
+    animation: boss-aura-flash 360ms steps(3, end) both;
+}
+
+.boss-impact {
+    position: absolute;
+    top: 46%;
+    left: 50%;
+    z-index: 5;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.boss-impact::before {
+    content: "";
+    position: absolute;
+    top: -25px;
+    left: -25px;
+    width: 50px;
+    height: 50px;
+    background: #fff5d6;
+    clip-path: polygon(
+        50% 0%,
+        60% 27%,
+        85% 9%,
+        76% 38%,
+        100% 50%,
+        75% 62%,
+        90% 88%,
+        62% 76%,
+        50% 100%,
+        38% 76%,
+        10% 90%,
+        25% 62%,
+        0% 50%,
+        25% 38%,
+        10% 10%,
+        40% 27%
+    );
+    filter: drop-shadow(0 0 4px #ff694a);
+    animation: boss-impact-flash 360ms steps(3, end) both;
+}
+
+.boss-impact::after {
+    content: "";
+    position: absolute;
+    top: -13px;
+    left: -13px;
+    width: 26px;
+    height: 26px;
+    box-sizing: border-box;
+    border: 3px solid #ff694a;
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 2px #fff5d6,
+        0 0 10px rgba(255, 53, 79, .7);
+    animation: boss-impact-ring 420ms ease-out both;
+}
+
+.boss-impact i {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: 19px;
+    height: 7px;
+    background: #fff5d6;
+    clip-path: polygon(
+        0 50%,
+        68% 0,
+        100% 50%,
+        68% 100%
+    );
+    filter: drop-shadow(0 0 3px #ff694a);
+    animation: boss-impact-spark 420ms ease-out both;
+}
+
+.boss-impact i:nth-child(1) {
+    --hit-angle: -140deg;
+    background: #fff5d6;
+}
+
+.boss-impact i:nth-child(2) {
+    --hit-angle: -90deg;
+    background: #ff694a;
+}
+
+.boss-impact i:nth-child(3) {
+    --hit-angle: -40deg;
+    background: #ffd166;
+}
+
+.boss-impact i:nth-child(4) {
+    --hit-angle: 0deg;
+    background: #ff354f;
+}
+
+.boss-impact i:nth-child(5) {
+    --hit-angle: 43deg;
+    background: #fff5d6;
+}
+
+.boss-impact i:nth-child(6) {
+    --hit-angle: 90deg;
+    background: #ff694a;
+}
+
+.boss-impact i:nth-child(7) {
+    --hit-angle: 137deg;
+    background: #ffd166;
+}
+
+.boss-impact i:nth-child(8) {
+    --hit-angle: 180deg;
+    background: #ff354f;
+}
+
+@keyframes bossIdle {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes boss-hit-reaction {
+    0% {
+        transform: translate(0, 0) rotate(0) scale(1);
+        filter: drop-shadow(4px 5px 0 #171326);
+    }
+
+    12% {
+        transform: translate(-7px, 2px) rotate(-5deg) scale(.96);
+        filter: brightness(2) drop-shadow(0 0 9px #fff5d6);
+    }
+
+    30% {
+        transform: translate(8px, -2px) rotate(5deg) scale(1.04);
+        filter: brightness(1.5) drop-shadow(0 0 9px #ff694a);
+    }
+
+    48% {
+        transform: translate(-6px, 1px) rotate(-3deg) scale(1.02);
+        filter: brightness(1.8) drop-shadow(0 0 7px #ff354f);
+    }
+
+    68% {
+        transform: translate(4px, 0) rotate(2deg) scale(.99);
+        filter: brightness(1.2) drop-shadow(0 0 4px #ff694a);
+    }
+
+    100% {
+        transform: translate(0, 0) rotate(0) scale(1);
+        filter: drop-shadow(4px 5px 0 #171326);
+    }
+}
+
+@keyframes boss-aura-flash {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.3);
+    }
+
+    25% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.15);
+    }
+
+    60% {
+        opacity: .65;
+        transform: translate(-50%, -50%) scale(.9);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
+}
+
+@keyframes boss-impact-flash {
+    0% {
+        opacity: 0;
+        transform: scale(.15) rotate(-20deg);
+    }
+
+    25% {
+        opacity: 1;
+        transform: scale(1.15) rotate(8deg);
+    }
+
+    60% {
+        opacity: .9;
+        transform: scale(.85) rotate(-5deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.5) rotate(15deg);
+    }
+}
+
+@keyframes boss-impact-ring {
+    0% {
+        opacity: 1;
+        transform: scale(.2);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(3.2);
+    }
+}
+
+@keyframes boss-impact-spark {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(var(--hit-angle)) scaleX(.3);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(
+            calc(-50% + var(--hit-x)),
+            calc(-50% + var(--hit-y))
+        ) rotate(var(--hit-angle)) scaleX(1.2);
+    }
+}
+
+@keyframes bossHitLabel {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 10px) scale(.7);
+    }
+
+    25% {
+        opacity: 1;
+        transform: translate(-50%, -5px) scale(1.2);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -35px) scale(1);
+    }
+}
+
 #quest.boss-mode-quest {
-  justify-content: flex-start;
-  gap: 6px;
-  padding: 8px 12px;
-  overflow: hidden;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 8px 12px;
+    overflow: hidden;
 }
 
 .boss-mode-quest .quest-header {
-  flex: 0 0 auto;
+    flex: 0 0 auto;
 }
 
 .boss-mode-quest .game-stage {
-  flex: 0 0 auto;
+    flex: 0 0 auto;
 }
 
 .boss-mode-quest .keyboard {
-  flex: 0 0 auto;
-  gap: 4px;
+    flex: 0 0 auto;
+    gap: 4px;
 }
 
 .boss-mode-quest .keyboard-row {
-  gap: 3px;
+    gap: 3px;
 }
 
 .boss-mode-quest .word-letters {
-  gap: 3px;
+    gap: 3px;
 }
-@media (max-width: 620px) {
-  .boss-fight-layout {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 135px auto;
-    height: auto;
-    max-height: 190px;
-  }
 
-  .boss-fight-layout .character-art {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .boss-fight-layout .boss-side-panel {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .boss-fight-layout .word-area {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-  .boss-side-art {
-    height: 105px;
-  }
-
-  .boss-side-art .boss-sprite {
-    height: 105px;
-    width: 90px;
-  }
-
-  .boss-fight-layout #gameArt .gallows {
-    width: 115px;
-    height: 115px;
-  }
-}
 .letter-slot.hint-revealed {
-  position: relative;
-  z-index: 2;
-  background: #ffd166 !important;
-  color: #16257a !important;
-  border-color: #fff3c0 !important;
-  animation: bossLetterReveal .75s ease-out;
-  box-shadow:
-    0 0 0 3px #ffd166,
-    0 0 18px #ffd166;
+    position: relative;
+    z-index: 2;
+    background: #ffd166 !important;
+    color: #16257a !important;
+    border-color: #fff3c0 !important;
+    animation: bossLetterReveal .75s ease-out;
+    box-shadow:
+        0 0 0 3px #ffd166,
+        0 0 18px #ffd166;
 }
 
 @keyframes bossLetterReveal {
-  0% {
-    transform: scale(.5) rotate(-12deg);
-    opacity: .2;
-    filter: brightness(2);
-  }
+    0% {
+        transform: scale(.5) rotate(-12deg);
+        opacity: .2;
+        filter: brightness(2);
+    }
 
-  35% {
-    transform: scale(1.35) rotate(8deg);
-    opacity: 1;
-    filter: brightness(1.5);
-  }
+    35% {
+        transform: scale(1.35) rotate(8deg);
+        opacity: 1;
+        filter: brightness(1.5);
+    }
 
-  65% {
-    transform: scale(.9) rotate(-4deg);
-  }
+    65% {
+        transform: scale(.9) rotate(-4deg);
+    }
 
-  100% {
-    transform: scale(1) rotate(0);
-    filter: brightness(1);
-  }
+    100% {
+        transform: scale(1) rotate(0);
+        filter: brightness(1);
+    }
+}
+
+@media (max-width: 620px) {
+    #quest.boss-mode-quest {
+        gap: 6px;
+        padding: 8px 10px;
+    }
+
+    .boss-fight-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: 110px auto;
+        height: auto;
+        max-height: 190px;
+        min-height: 0;
+        gap: 5px;
+        padding: 30px 6px 4px;
+    }
+
+    .boss-side-info .boss-health-track {
+        left: 75%;
+        width: 34%;
+        max-width: 125px;
+        height: 14px;
+    }
+
+    #bossTimerText {
+        min-width: 72px;
+        min-height: 25px;
+        padding: 3px 6px;
+        font-size: 10px;
+        letter-spacing: 1px;
+    }
+
+    .boss-fight-layout .character-art {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .boss-fight-layout .boss-side-art {
+        grid-column: 2;
+        grid-row: 1;
+        height: 110px;
+    }
+
+    .boss-fight-layout .boss-side-art .boss-sprite {
+        width: 105px;
+        height: 137px;
+    }
+
+    .boss-fight-layout .word-area {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    .boss-fight-layout #gameArt .gallows {
+        width: 105px;
+        height: 105px;
+    }
+
+    .boss-mode-quest .keyboard {
+        gap: 3px;
+    }
+
+    .boss-mode-quest .keyboard-row {
+        gap: 2px;
+    }
+}
+
+@media (max-width: 380px) {
+    .boss-fight-layout {
+        grid-template-rows: 100px auto;
+        max-height: 175px;
+        padding-top: 27px;
+    }
+
+    .boss-side-info .boss-health-track {
+        width: 32%;
+        height: 12px;
+    }
+
+    #bossTimerText {
+        min-width: 65px;
+        min-height: 23px;
+        font-size: 9px;
+    }
+
+    .boss-fight-layout .boss-side-art .boss-sprite {
+        width: 95px;
+        height: 124px;
+    }
+
+    .boss-fight-layout #gameArt .gallows {
+        width: 95px;
+        height: 95px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .boss-sprite {
+        animation: none;
+    }
+
+    #bossCharacter.boss-hit {
+        animation-duration: .2s;
+    }
+
+    .boss-impact,
+    .boss-side-art.boss-hit-flash::before {
+        animation-duration: .2s;
+    }
 }

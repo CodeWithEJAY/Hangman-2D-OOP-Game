@@ -814,7 +814,6 @@ const startBossTimer = () => {
     }
   }, 1000);
 };
-
 const bossRoundWon = () => {
   clearInterval(game.boss.timer);
   game.boss.timer = null;
@@ -823,12 +822,12 @@ const bossRoundWon = () => {
   successTimer = null;
 
   game.boss.hp--;
-  playHankAttackSound();
-playBossDamageSound();
 
-  bossDamageAnimation();
+  playHankAttackSound();
+  playBossDamageSound();
 
   renderQuest();
+  bossDamageAnimation();
 
   if (game.boss.hp <= 0) {
     defeatBoss();
@@ -843,6 +842,7 @@ playBossDamageSound();
     }
   }, 1200);
 };
+
 const bossTimeout = () => {
   clearInterval(game.boss.timer);
   game.boss.timer = null;
@@ -886,10 +886,9 @@ const defeatBoss = () => {
 
   game.boss.hp = 0;
   game.boss.active = false;
-  game.boss.defeated = true;
+
   playBossDefeatSound();
   playQuestCompleteSound();
-
 
   game.activeNPC = null;
   game.boss.round = null;
@@ -1179,11 +1178,14 @@ const showToast = message => {
 };
 
 /* ---------- DIALOGUE ---------- */
-
 const say = (element, message) => {
   if (!element) return;
 
   window.clearInterval(dialogue.typingTimer);
+  window.clearTimeout(dialogue.victoryResultTimer);
+
+  dialogue.victoryResultAnimation?.cancel();
+  dialogue.victoryResultAnimation = null;
 
   const textElement = element.querySelector(".txt");
   if (!textElement) return;
@@ -1192,13 +1194,28 @@ const say = (element, message) => {
   let soundCounter = 0;
 
   const isBoss = dialogue.npc === BOSS;
+  const isVictoryDialogue =
+    dialogue.afterSequence === "bossVictoryResult";
+
+  const isFinalVictoryLine =
+    isVictoryDialogue &&
+    dialogue.messageIndex === dialogue.messages.length - 1;
+
+  if (isVictoryDialogue) {
+    document.body.dataset.bossVictoryTyping = "true";
+
+    if (isFinalVictoryLine) {
+      document.body.dataset.bossVictoryFinalLine = "true";
+    } else {
+      delete document.body.dataset.bossVictoryFinalLine;
+    }
+  }
 
   dialogue.typing = true;
   textElement.textContent = "";
 
   const updateInstruction = () => {
     const instruction = element.querySelector("i");
-
     if (!instruction) return;
 
     if (dialogue.bossIntroActive) {
@@ -1214,24 +1231,46 @@ const say = (element, message) => {
       return;
     }
 
-    const lastMessage =
-      dialogue.messageIndex >= dialogue.messages.length - 1;
-
     instruction.textContent = dialogue.typing
-      ? "SPEAKING..."
-      : lastMessage
-        ? dialogue.afterSequence === "startQuest"
+      ? isVictoryDialogue
+        ? "THE KING IS SPEAKING..."
+        : "SPEAKING..."
+      : isFinalVictoryLine
+        ? "THE KING HAS FINISHED SPEAKING..."
+        : dialogue.afterSequence === "startQuest"
           ? "E · TAKE THE QUEST"
-          : "E · CLOSE"
-        : "E · CONTINUE";
+          : isVictoryDialogue
+            ? "E · CONTINUE"
+            : dialogue.messageIndex >= dialogue.messages.length - 1
+              ? "E · CLOSE"
+              : "E · CONTINUE";
   };
 
   const finishTyping = () => {
     window.clearInterval(dialogue.typingTimer);
+
     dialogue.typingTimer = null;
     dialogue.typing = false;
     textElement.textContent = message;
+
+    if (isVictoryDialogue) {
+      document.body.dataset.bossVictoryTyping = "false";
+    }
+
     updateInstruction();
+
+    if (isFinalVictoryLine) {
+      dialogue.victoryResultTimer = window.setTimeout(() => {
+        dialogue.victoryResultTimer = null;
+
+        if (
+          dialogue.afterSequence === "bossVictoryResult" &&
+          document.body.dataset.bossVictoryDialogue === "true"
+        ) {
+          endGame(true, true);
+        }
+      }, 1800);
+    }
   };
 
   if (!message.length) {
@@ -1261,30 +1300,7 @@ const say = (element, message) => {
 
   updateInstruction();
 };
-const openNPCQuestDialogue = npc => {
-  let messages = [];
-  let action = "close";
 
-  if (completedNPCNames.has(npc.name)) {
-    messages = [npc.done || "Thank you for helping me!"];
-  } else if (!npc.requiresItems?.length) {
-    messages = [npc.intro];
-    action = "startQuest";
-  } else if (!hasQuestItem(npc)) {
-    messages = [
-      npc.intro,
-      npc.lockedDialogue || npc.requiredDialogue || "I still need an item before we can continue."
-    ];
-  } else {
-    messages = [
-      npc.intro,
-      npc.readyDialogue || "Wonderful! Let's get started!"
-    ];
-    action = "startQuest";
-  }
-
-  openDialogue(npc, messages, action);
-};
 const openDialogue = (npc, messages, afterSequence = "close") => {
   const element = getElement("dlg");
   if (!element) return;
@@ -1342,6 +1358,7 @@ const closeDialogue = (force = false) => {
     !force &&
     (
       dialogue.bossIntroActive ||
+      dialogue.afterSequence === "bossVictoryResult" ||
       (dialogue.npc && dialogue.typing)
     )
   ) return;
@@ -1364,7 +1381,6 @@ const closeDialogue = (force = false) => {
     element.hidden = true;
   }
 };
-
 const openBossIntro = () => {
   dialogue.bossIntroActive = true;
   dialogue.bossIntroIndex = 0;
@@ -2405,20 +2421,109 @@ const pauseGame = () => {
     showScreen(null);
   }
 };
-const endGame = victory => {
+const endGame = (victory, showResultAfterDialogue = false) => {
   if (game.mode === "end" || game.mode === "credits") return;
+
+  if (victory && !showResultAfterDialogue) {
+    if (game.boss.victorySequenceStarted) return;
+
+    game.boss.victorySequenceStarted = true;
+    document.body.dataset.bossVictoryDialogue = "true";
+
+    game.boss.victoryElapsedTime = game.elapsedTime;
+
+    document.body.classList.remove("boss-fight-active");
+
+    clearInterval(game.boss.timer);
+    game.boss.timer = null;
+    game.boss.active = false;
+
+    stopBossMusic();
+
+    game.mode = "play";
+
+    const showVictoryDialogue = () => {
+      showScreen("game");
+
+      openDialogue(
+        BOSS,
+        [
+          "I see... Quite an unexpected encounter, wouldn't you say?",
+          "You may have stumbled upon this village by chance, but you've proven your strength.",
+          "I only challenged you because the world beyond these walls can be cruel. I've learned that the hard way.",
+          "Promise me something, little hero...",
+          "No matter what lies ahead, don't let anything take away the people and things you hold dear.",
+          "Take care out there. I wish you well."
+        ],
+        "bossVictoryResult"
+      );
+    };
+
+    const questPanel = getElement("quest");
+
+    if (
+      questPanel &&
+      questPanel.getClientRects().length > 0 &&
+      typeof questPanel.animate === "function"
+    ) {
+      const panelTransition = questPanel.animate(
+        [
+          {
+            opacity: 1,
+            transform: "translateY(0) scale(1)",
+            filter: "blur(0px)"
+          },
+          {
+            opacity: 0.9,
+            transform: "translateY(3px) scale(0.995)",
+            filter: "blur(0px)",
+            offset: 0.35
+          },
+          {
+            opacity: 0,
+            transform: "translateY(12px) scale(0.975)",
+            filter: "blur(2px)"
+          }
+        ],
+        {
+          duration: 850,
+          easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+          fill: "forwards"
+        }
+      );
+
+      panelTransition.onfinish = () => {
+        panelTransition.cancel();
+        showVictoryDialogue();
+      };
+    } else {
+      showVictoryDialogue();
+    }
+
+    return;
+  }
 
   document.body.classList.remove("boss-fight-active");
 
   game.mode = "end";
 
-  stopBossMusic();
+  delete document.body.dataset.bossVictoryDialogue;
 
   clearInterval(game.boss.timer);
   game.boss.timer = null;
   game.boss.active = false;
 
+  if (victory) {
+    game.boss.defeated = true;
+  }
+
+  stopBossMusic();
+
   closeDialogue(true);
+
+  if (victory && Number.isFinite(game.boss.victoryElapsedTime)) {
+    game.elapsedTime = game.boss.victoryElapsedTime;
+  }
 
   const levelScore = game.score + game.candies * 10;
 
@@ -2579,8 +2684,6 @@ const endGame = victory => {
   stopGameMusic();
   stopBossMusic();
 };
-
-
 const returnToCreditsMenu = () => {
   if (game.mode !== "credits") return;
 
@@ -2711,6 +2814,10 @@ const finishCredits = () => {
     finale.hidden = false;
   }
 };
+
+const isBossVictoryDialogueActive = () => {
+  return document.body.dataset.bossVictoryDialogue === "true";
+};
 const isIntroDialogueActive = () => {
   return document.body.dataset.introDialogue === "true";
 };
@@ -2755,8 +2862,34 @@ const advanceIntroDialogue = () => {
 
   finishIntroDialogue();
 };
-/* ---------- ACTIONS ---------- */
 const handleAction = action => {
+  if (document.body.dataset.bossVictoryDialogue === "true") {
+    if (action !== "interact") return;
+
+    if (dialogue.typing) return;
+
+    if (
+      document.body.dataset.bossVictoryFinalLine === "true"
+    ) {
+      return;
+    }
+
+    const element = getElement("dlg");
+
+    if (!element || element.hidden) return;
+
+    if (dialogue.messageIndex < dialogue.messages.length - 1) {
+      dialogue.messageIndex++;
+
+      say(
+        element,
+        dialogue.messages[dialogue.messageIndex]
+      );
+    }
+
+    return;
+  }
+
   if (game.mode === "credits") {
     if (action === "skipCredits") {
       finishCredits();
@@ -3031,7 +3164,8 @@ const renderGame = time => {
     Boolean(dialogue.npc),
     game.boss.unlocked,
     game.boss.defeated,
-    bossEntryProgress
+    bossEntryProgress,
+    dialogue.npc === BOSS && dialogue.typing
   );
 
   if (game.player) {
@@ -3151,36 +3285,64 @@ export const initializeGame = () => {
 };
 
 const bossDamageAnimation = () => {
-  const boss = getElement("bossCharacter");
-  const label = getElement("bossHitLabel");
+  const bossArt =
+    getElement("bossDisplay")?.querySelector(".boss-side-art") ||
+    document.querySelector(".boss-side-art");
 
-  if (!boss) return;
-
-  boss.classList.remove("hit");
-  void boss.offsetWidth;
-  boss.classList.add("hit");
-
-  if (label) {
-    label.textContent = "-1 HP";
-    label.classList.remove("show");
-
-    void label.offsetWidth;
-    label.classList.add("show");
+  if (!bossArt) {
+    console.warn("Boss damage effect: .boss-side-art not found.");
+    return;
   }
+
+  const bossCharacter =
+    bossArt.querySelector("#bossCharacter") ||
+    bossArt.querySelector("svg");
+
+  if (!bossCharacter) {
+    console.warn("Boss damage effect: boss SVG not found.");
+    return;
+  }
+
+  bossCharacter.id = "bossCharacter";
+
+  bossCharacter.classList.remove("boss-hit");
+  bossArt.classList.remove("boss-hit-flash");
+  bossArt.querySelector(".boss-impact")?.remove();
+
+  void bossCharacter.offsetWidth;
+
+  bossCharacter.classList.add("boss-hit");
+  bossArt.classList.add("boss-hit-flash");
 
   const impact = document.createElement("div");
   impact.className = "boss-impact";
-  impact.innerHTML = "<i></i>".repeat(8);
 
-  boss.appendChild(impact);
+  const directions = [
+    [-26, -22],
+    [0, -34],
+    [26, -22],
+    [36, 0],
+    [26, 24],
+    [0, 34],
+    [-26, 24],
+    [-36, 0]
+  ];
+
+  impact.innerHTML = directions
+    .map(
+      ([x, y]) =>
+        `<i style="--hit-x:${x}px;--hit-y:${y}px"></i>`
+    )
+    .join("");
+
+  bossArt.appendChild(impact);
 
   window.setTimeout(() => {
+    bossCharacter.classList.remove("boss-hit");
+    bossArt.classList.remove("boss-hit-flash");
     impact.remove();
-    boss.classList.remove("hit");
-  }, 700);
+  }, 550);
 };
-
-
 // this is for testing the game i did not go for other file 
 //since this is the main js file that is getting fetched hassle 
 
